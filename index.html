@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRIVATE BUILD — Ecosystem Map</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #0f0f16;
+  --bg3: #141420;
+  --bg4: #1c1c2a;
+  --border: #1e1e2e;
+  --border2: #2a2a3e;
+  --metal0: #606078;
+  --metal1: #8888a8;
+  --metal2: #b0b0d0;
+  --text-primary: #e8e8f8;
+  --text-secondary: #a0a0c0;
+  --text-muted: #606080;
+  --red: #e03535;
+  --green: #38b068;
+  --electric: #4466ff;
+  --electric-bright: #6688ff;
+  --gold: #c8a84a;
+  --gold-bright: #ffe08a;
+  --gold-glow: rgba(200,168,74,0.4);
+  --purple: #7755ff;
+  --purple-glow: rgba(119,85,255,0.35);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  background-image:
+    linear-gradient(rgba(46,46,62,0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46,46,62,0.25) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  cursor: grab;
+}
+body.grabbing { cursor: grabbing; }
+
+/* TOOLBAR */
+#toolbar {
+  position: fixed; top:0; left:0; right:0; height:52px;
+  background: rgba(10,10,15,0.95);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; z-index: 1000;
+  backdrop-filter: blur(16px);
+}
+#toolbar .logo {
+  font-family: 'Inter Tight', sans-serif;
+  font-size: 13px; font-weight: 800;
+  letter-spacing: 3px; color: var(--gold);
+}
+#toolbar .logo span { color: var(--text-muted); font-weight:400; font-size:11px; letter-spacing:1px; margin-left:12px; }
+.tb-group { display:flex; gap:6px; align-items:center; }
+.tb-btn {
+  background: var(--bg3); border:1px solid var(--border);
+  color: var(--text-secondary); padding:6px 14px; border-radius:6px;
+  font-family:'Inter',sans-serif; font-size:11px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; letter-spacing:0.5px;
+}
+.tb-btn:hover { border-color:var(--gold); color:var(--gold); }
+.tb-btn.sync-btn { border-color:var(--green); color:var(--green); }
+.tb-btn.sync-btn:hover { background:rgba(56,176,104,0.1); }
+.tb-btn.sync-btn.syncing { animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+#zoom-display { font-size:11px; color:var(--text-muted); min-width:44px; text-align:center; font-weight:600; }
+.tb-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+
+/* PRIORITY PANEL */
+#priority-panel {
+  position:fixed; top:52px; right:0; width:300px; height:calc(100vh - 52px);
+  background:rgba(15,15,22,0.97); border-left:1px solid var(--border);
+  z-index:999; overflow-y:auto; padding:16px;
+  backdrop-filter:blur(12px); transition:right 0.3s;
+}
+#priority-panel.hidden { right:-320px; }
+#priority-panel h3 {
+  font-family:'Inter Tight',sans-serif;
+  font-size:11px; font-weight:800; letter-spacing:2px;
+  color:var(--red); margin-bottom:12px;
+}
+.priority-item {
+  background:var(--bg3); border:1px solid var(--border);
+  border-left:3px solid var(--red); border-radius:8px;
+  padding:10px 12px; margin-bottom:8px; cursor:pointer;
+  transition:all 0.2s; font-size:11px;
+}
+.priority-item:hover { border-color:var(--gold); transform:translateX(-2px); }
+.priority-item .pi-title { font-weight:700; color:var(--text-primary); margin-bottom:2px; }
+.priority-item .pi-zone { font-size:9px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; }
+.priority-item .pi-tag {
+  display:inline-block; font-size:8px; font-weight:700;
+  padding:2px 6px; border-radius:3px; margin-top:4px;
+  letter-spacing:0.5px;
+}
+.tag-blocker { background:rgba(224,53,53,0.15); color:var(--red); }
+.tag-empty { background:rgba(200,168,74,0.15); color:var(--gold); }
+.tag-manual { background:rgba(119,85,255,0.15); color:var(--purple); }
+.tag-noauto { background:rgba(68,102,255,0.15); color:var(--electric); }
+
+/* CANVAS */
+#canvas-container { position:absolute; top:52px; left:0; right:0; bottom:0; overflow:hidden; }
+#canvas { position:absolute; width:5400px; height:3200px; transform-origin:0 0; }
+
+/* SVG */
+#connections { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+#connections path { fill:none; stroke-width:2; }
+.fl-main { stroke:var(--gold); stroke-width:2.5; opacity:0.5; }
+.fl-return { stroke:var(--green); stroke-dasharray:6 4; opacity:0.4; }
+.fl-internal { stroke:var(--border2); stroke-dasharray:4 4; opacity:0.3; }
+
+/* ZONES */
+.zone {
+  position:absolute; border-radius:16px; z-index:2;
+}
+.zone-head {
+  font-family:'Inter Tight',sans-serif;
+  font-size:11px; font-weight:800; letter-spacing:3px;
+  text-transform:uppercase; padding:16px 20px 12px;
+}
+.z-marketing { background:rgba(200,168,74,0.03); border:1px solid rgba(200,168,74,0.12); }
+.z-marketing .zone-head { color:var(--gold); }
+.z-comercial { background:rgba(68,102,255,0.03); border:1px solid rgba(68,102,255,0.12); }
+.z-comercial .zone-head { color:var(--electric); }
+.z-onboarding { background:rgba(56,176,104,0.03); border:1px solid rgba(56,176,104,0.12); }
+.z-onboarding .zone-head { color:var(--green); }
+.z-producto { background:rgba(119,85,255,0.03); border:1px solid rgba(119,85,255,0.12); }
+.z-producto .zone-head { color:var(--purple); }
+.z-success { background:rgba(224,53,53,0.03); border:1px solid rgba(224,53,53,0.12); }
+.z-success .zone-head { color:var(--red); }
+
+/* NODES */
+.node {
+  position:absolute; background:var(--bg2);
+  border:1px solid var(--border); border-radius:10px;
+  padding:12px 14px; min-width:170px; max-width:280px;
+  cursor:pointer; transition:all 0.2s; z-index:10;
+}
+.node:hover {
+  transform:translateY(-2px);
+  box-shadow:0 6px 20px rgba(0,0,0,0.5);
+  border-color:var(--gold);
+}
+.node-t { font-size:12px; font-weight:700; margin-bottom:3px; line-height:1.3; }
+.node-s { font-size:10px; color:var(--text-secondary); line-height:1.45; }
+.node-tag {
+  display:inline-block; font-size:8px; font-weight:700;
+  padding:2px 6px; border-radius:3px; margin-top:6px;
+  letter-spacing:0.5px;
+}
+.t-live { background:rgba(56,176,104,0.15); color:var(--green); }
+.t-pending { background:rgba(224,53,53,0.15); color:var(--red); }
+.t-wip { background:rgba(200,168,74,0.15); color:var(--gold); }
+.t-manual { background:rgba(119,85,255,0.15); color:var(--purple); }
+.t-future { background:rgba(96,96,120,0.15); color:var(--metal0); }
+.t-ready { background:rgba(56,176,104,0.1); color:var(--green); }
+.t-blocker { background:rgba(224,53,53,0.2); color:var(--red); border:1px solid rgba(224,53,53,0.3); }
+
+.node-notion {
+  display:none; font-size:9px; color:var(--electric-bright);
+  margin-top:6px; text-decoration:none; opacity:0.7;
+}
+.node:hover .node-notion { display:block; }
+.node-notion:hover { opacity:1; }
+
+/* Accent borders */
+.n-gold { border-left:3px solid var(--gold); }
+.n-blue { border-left:3px solid var(--electric); }
+.n-purple { border-left:3px solid var(--purple); }
+.n-green { border-left:3px solid var(--green); }
+.n-red { border-left:3px solid var(--red); }
+.n-hub {
+  background:rgba(200,168,74,0.04);
+  border:1.5px solid rgba(200,168,74,0.2);
+  text-align:center;
+}
+
+/* Flow labels */
+.fl-label {
+  position:absolute; font-size:9px; font-weight:600;
+  color:var(--text-muted); background:var(--bg);
+  padding:2px 8px; border-radius:4px; z-index:5;
+  pointer-events:none; letter-spacing:0.5px;
+}
+
+/* LEGEND */
+#legend {
+  position:fixed; bottom:16px; left:16px;
+  background:rgba(15,15,22,0.92); border:1px solid var(--border);
+  border-radius:8px; padding:10px 14px; z-index:999; font-size:9px;
+}
+.leg-row { display:flex; align-items:center; gap:8px; margin-bottom:3px; color:var(--text-secondary); }
+.leg-line { width:20px; height:2px; border-radius:1px; }
+
+/* MINIMAP */
+#minimap {
+  position:fixed; bottom:16px; right:16px; width:200px; height:130px;
+  background:rgba(15,15,22,0.92); border:1px solid var(--border);
+  border-radius:8px; z-index:998; overflow:hidden;
+}
+#minimap.shift { right:320px; }
+#mm-vp { position:absolute; border:1px solid var(--gold); background:rgba(200,168,74,0.06); pointer-events:none; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <div class="logo">PRIVATE BUILD<span>ecosystem map</span></div>
+  <div class="tb-group">
+    <button class="tb-btn" onclick="focusZone('marketing')">Marketing</button>
+    <button class="tb-btn" onclick="focusZone('comercial')">Comercial</button>
+    <button class="tb-btn" onclick="focusZone('onboarding')">Onboarding</button>
+    <button class="tb-btn" onclick="focusZone('producto')">Producto</button>
+    <button class="tb-btn" onclick="focusZone('success')">Success</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="zoomBy(-0.08)">-</button>
+    <span id="zoom-display">45%</span>
+    <button class="tb-btn" onclick="zoomBy(0.08)">+</button>
+    <button class="tb-btn" onclick="resetView()">Reset</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="togglePriorities()" id="prio-btn">Prioridades</button>
+    <button class="tb-btn sync-btn" onclick="syncNotion()" id="sync-btn">Sync Notion</button>
+  </div>
+</div>
+
+<div id="canvas-container">
+<div id="canvas">
+
+<svg id="connections" viewBox="0 0 5400 3200">
+  <defs>
+    <marker id="ag" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0,7 2.5,0 5" fill="var(--gold)" opacity="0.5"/>
+    </marker>
+    <marker id="ar" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0,7 2.5,0 5" fill="var(--green)" opacity="0.4"/>
+    </marker>
+  </defs>
+  <!-- MARKETING → COMERCIAL -->
+  <path class="fl-main" d="M 960,380 C 1100,380 1150,380 1250,380" marker-end="url(#ag)"/>
+  <!-- COMERCIAL → ONBOARDING -->
+  <path class="fl-main" d="M 2500,380 C 2620,380 2680,380 2780,380" marker-end="url(#ag)"/>
+  <!-- ONBOARDING → PRODUCTO -->
+  <path class="fl-main" d="M 3750,450 C 3750,650 2700,700 2700,850" marker-end="url(#ag)"/>
+  <!-- PRODUCTO → SUCCESS -->
+  <path class="fl-main" d="M 3600,1100 C 3700,1100 3800,1100 3900,1050" marker-end="url(#ag)"/>
+  <!-- SUCCESS → MARKETING (the loop) -->
+  <path class="fl-return" d="M 4800,700 C 5000,400 5000,100 2700,60 C 400,20 100,100 200,250" marker-end="url(#ar)"/>
+  <!-- Referidos loop -->
+  <path class="fl-return" d="M 4600,950 C 4700,1200 500,1300 350,700" marker-end="url(#ar)"/>
+</svg>
+
+<!-- ============================================ -->
+<!-- 01 MARKETING                                 -->
+<!-- ============================================ -->
+<div class="zone z-marketing" id="zone-marketing" style="left:60px;top:130px;width:920px;height:700px;">
+  <div class="zone-head">01 · Marketing</div>
+
+  <div class="node n-gold" style="left:20px;top:55px;width:260px;"
+       data-n="https://www.notion.so/3211b21db3ba81f2813ae6065d109bfb" data-z="marketing">
+    <div class="node-t">📱 Instagram Organico</div>
+    <div class="node-s">Reels 2x/sem + Carruseles 1x/sem. Dolor + desbloqueo + demos de stack. CTA → bio link o DM</div>
+    <div class="node-tag t-pending">0 PUBLICADOS</div>
+    <a class="node-notion" href="https://www.notion.so/3211b21db3ba81f2813ae6065d109bfb" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-gold" style="left:320px;top:55px;width:260px;"
+       data-n="https://www.notion.so/3271b21db3ba81f1be4ad99d5a01efbd" data-z="marketing">
+    <div class="node-t">📣 Meta Ads (Paid)</div>
+    <div class="node-s">Trafico pagado → privatebuild.app o WhatsApp directo. Budget $5-10/dia. Creative desde Reels organicos ganadores</div>
+    <div class="node-tag t-pending">NO ACTIVO</div>
+    <a class="node-notion" href="https://www.notion.so/3271b21db3ba81f1be4ad99d5a01efbd" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:620px;top:55px;width:260px;"
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="marketing">
+    <div class="node-t">🔄 Referidos</div>
+    <div class="node-s"><strong>Pago:</strong> Refiere → 1 mes extra de programa. Si no renueva → se cortan accesos.<br><strong>Comunidad:</strong> Refiere → giftcard $50K CLP para herramientas (Claude, Notion, Fathom, etc). Vienen por el premio, se quedan nutridos</div>
+    <div class="node-tag t-wip">MECANICA DEFINIDA</div>
+  </div>
+
+  <div class="node n-gold" style="left:20px;top:230px;width:400px;"
+       data-n="https://www.notion.so/2501b21db3ba80f09425f7dd9fe92fe7" data-z="marketing">
+    <div class="node-t">🎬 Produccion Contenido MVP</div>
+    <div class="node-s">32 piezas planificadas (Reels, Carruseles, Stories). Regla: 3 tomas max, el 3ro se publica. Angulos: Tecnologia, Construir vs Escalar, Habilidades, Sabiduria</div>
+    <div class="node-tag t-pending">32/32 PENDIENTES</div>
+    <a class="node-notion" href="https://www.notion.so/2501b21db3ba80f09425f7dd9fe92fe7" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-gold" style="left:460px;top:230px;width:240px;"
+       data-n="https://www.notion.so/20f1b21db3ba8045a59fd9ecf307c370" data-z="marketing">
+    <div class="node-t">⚡ Contenido Hacks</div>
+    <div class="node-s">Templates para hooks, CTAs, estructura. Formula por angulo comunicacional</div>
+    <div class="node-tag t-live">LISTO</div>
+    <a class="node-notion" href="https://www.notion.so/20f1b21db3ba8045a59fd9ecf307c370" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-gold" style="left:20px;top:400px;width:280px;"
+       data-n="https://www.notion.so/3231b21db3ba818dbe97f08e5dde8edf" data-z="marketing">
+    <div class="node-t">🧭 Angulos Comunicacionales</div>
+    <div class="node-s">🤖 Tecnologia & IA · 🏗️ Construir vs Escalar · 🧠 Habilidades & Cuellos · 💡 Sabiduria & Mentalidad</div>
+    <a class="node-notion" href="https://www.notion.so/3231b21db3ba818dbe97f08e5dde8edf" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-gold" style="left:340px;top:400px;width:260px;"
+       data-n="https://www.notion.so/3271b21db3ba816390b0d1116f2a9f4b" data-z="marketing">
+    <div class="node-t">🎨 Banco de Carruseles</div>
+    <div class="node-s">Templates + assets en Canva. Fuente de verdad para produccion visual</div>
+    <a class="node-notion" href="https://www.notion.so/3271b21db3ba816390b0d1116f2a9f4b" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-gold" style="left:640px;top:400px;width:240px;"
+       data-n="https://www.notion.so/3281b21db3ba81cebd23e7bdc75f4c55" data-z="marketing">
+    <div class="node-t">🎨 Brand Guideline v2.0</div>
+    <div class="node-s">Identidad visual, tono, colores. Cyberpunk + sistemas + consciencia</div>
+    <div class="node-tag t-live">DEFINIDO</div>
+    <a class="node-notion" href="https://www.notion.so/3281b21db3ba81cebd23e7bdc75f4c55" target="_blank">→ Notion</a>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 02 COMERCIAL                                 -->
+<!-- ============================================ -->
+<div class="zone z-comercial" id="zone-comercial" style="left:1060px;top:130px;width:1500px;height:700px;">
+  <div class="zone-head">02 · Comercial</div>
+
+  <div class="node n-blue" style="left:20px;top:55px;width:260px;"
+       data-n="https://www.notion.so/3251b21db3ba8147a74cc541eed017a2" data-z="comercial">
+    <div class="node-t">🌐 privatebuild.app</div>
+    <div class="node-s">Landing publica. Mapa del desafio + nivelador. CTA → WhatsApp o formulario</div>
+    <div class="node-tag t-live">LIVE</div>
+    <a class="node-notion" href="https://www.notion.so/3251b21db3ba8147a74cc541eed017a2" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-blue n-hub" style="left:320px;top:50px;width:280px;"
+       data-n="" data-z="comercial">
+    <div class="node-t">💬 WhatsApp — Lobby de Nutricion</div>
+    <div class="node-s">Canal principal de nurturing. News, encuestas, temperatura de miembros. El "lobby" antes de entrar al ecosistema de pago</div>
+    <div class="node-tag t-manual">MANUAL</div>
+  </div>
+
+  <div class="node n-blue" style="left:320px;top:230px;width:280px;"
+       data-n="" data-z="comercial">
+    <div class="node-t">📅 Cadencia Semanal WhatsApp</div>
+    <div class="node-s">
+      <strong>Lun:</strong> Saludo inicio semana<br>
+      <strong>Mar:</strong> Win/news relevante + pregunta<br>
+      <strong>Mie:</strong> Compartir contenido IG (lead magnet)<br>
+      <strong>Jue:</strong> Silencio<br>
+      <strong>Vie:</strong> CTA → calls fin de semana o usar la app web
+    </div>
+    <div class="node-tag t-pending">POR ARMAR</div>
+  </div>
+
+  <div class="node n-blue" style="left:640px;top:55px;width:280px;"
+       data-n="" data-z="comercial">
+    <div class="node-t">🤖 IG DM Automation</div>
+    <div class="node-s">Clientes potenciales etiquetados en IG. Auto-saludo con pregunta sobre bio. ManyChat o Claude. "Has pensado en...?" → engancha → call<br><br><em>El flow logico primero, la automatizacion despues</em></div>
+    <div class="node-tag t-pending">LOGICA PENDING</div>
+  </div>
+
+  <div class="node n-blue" style="left:640px;top:280px;width:280px;"
+       data-n="https://www.notion.so/3241b21db3ba8101aa48d376fbaf7bc0" data-z="comercial">
+    <div class="node-t">📋 Formulario Diagnostico</div>
+    <div class="node-s">10-15 preguntas → resultado automatico: Skiller / Operator / Builder. Make → Notion</div>
+    <div class="node-tag t-live">LIVE</div>
+    <a class="node-notion" href="https://www.notion.so/3241b21db3ba8101aa48d376fbaf7bc0" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-blue" style="left:960px;top:55px;width:260px;"
+       data-n="https://www.notion.so/bd8b00f0f7d445fc98501c25eef76dc0" data-z="comercial">
+    <div class="node-t">📞 Llamada Diagnostico</div>
+    <div class="node-s">30 min gratuita. Evaluar perfil + presentar programa + cierre o reserva ($100K CLP)</div>
+    <div class="node-tag t-live">ACTIVO</div>
+  </div>
+
+  <div class="node n-blue" style="left:960px;top:220px;width:260px;"
+       data-n="https://www.notion.so/3271b21db3ba81b38a30febe03d5827b" data-z="comercial">
+    <div class="node-t">🎯 Script Master</div>
+    <div class="node-s">Scripts de cierre por objecion: precio, tiempo, "no es el momento", "puedo solo". Reframes de dolores → ganancias concretas</div>
+    <div class="node-tag t-live">LISTO</div>
+    <a class="node-notion" href="https://www.notion.so/3271b21db3ba81b38a30febe03d5827b" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-blue" style="left:960px;top:400px;width:260px;"
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="comercial">
+    <div class="node-t">💼 COMERCIAL — Fuente de Verdad</div>
+    <div class="node-s">Precios, programas, modalidades pago, argumentos, herramientas por etapa. Actualizado 31/03/2026</div>
+    <div class="node-tag t-live">ACTUALIZADO</div>
+    <a class="node-notion" href="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:20px;top:400px;width:270px;"
+       data-n="https://www.notion.so/375f862952a84b8a8987cef6978ac3fe" data-z="comercial">
+    <div class="node-t">📊 CRM — Clientes & Comunidad</div>
+    <div class="node-s">Nombre, etapa PB, estado, canal contacto, tipo oferta, MRR, diagnostico, onboarding, proxima accion, resultado logrado</div>
+    <div class="node-tag t-wip">ESTRUCTURA LISTA</div>
+    <a class="node-notion" href="https://www.notion.so/375f862952a84b8a8987cef6978ac3fe" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-blue" style="left:320px;top:460px;width:280px;"
+       data-n="https://www.notion.so/bd8b00f0f7d445fc98501c25eef76dc0" data-z="comercial">
+    <div class="node-t">📝 Llamadas de Venta (DB)</div>
+    <div class="node-s">Registro de calls: fecha, duracion, objeciones, resultado. Alimenta el CRM</div>
+    <div class="node-tag t-pending">VACIO</div>
+  </div>
+
+  <div class="node n-blue" style="left:640px;top:460px;width:280px;"
+       data-n="" data-z="comercial">
+    <div class="node-t">💳 Cierre & Pago</div>
+    <div class="node-s">Reserva $100K CLP bloquea precio. 1-3 cuotas. Stripe pendiente. Transferencia manual por ahora</div>
+    <div class="node-tag t-manual">SIN STRIPE</div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 03 ONBOARDING                                -->
+<!-- ============================================ -->
+<div class="zone z-onboarding" id="zone-onboarding" style="left:2640px;top:130px;width:1200px;height:700px;">
+  <div class="zone-head">03 · Onboarding</div>
+
+  <div class="node n-green n-hub" style="left:20px;top:55px;width:340px;"
+       data-n="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" data-z="onboarding">
+    <div class="node-t">🟡 Desafio 30 Dias (Gratis)</div>
+    <div class="node-s">Skiller → Operator. Claridad + posicionamiento + primera venta. Puerta de entrada al ecosistema. Quien completa → beneficio unico para entrar a Operator</div>
+    <div class="node-tag t-live">ACTIVO</div>
+    <a class="node-notion" href="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:400px;top:55px;width:340px;"
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="onboarding">
+    <div class="node-t">🔵 Setup Inicial — Operator (S1-S2)</div>
+    <div class="node-s">Instalar Claude Pro + Notion + Drive + Calendar. Construir Brain Document personalizado. Mapear negocio actual. Plan 6 meses con hitos</div>
+    <div class="node-tag t-ready">DEFINIDO</div>
+  </div>
+
+  <div class="node n-green" style="left:780px;top:55px;width:380px;"
+       data-n="" data-z="onboarding">
+    <div class="node-t">🎁 Beneficios por Graduacion</div>
+    <div class="node-s">
+      <strong>Completa Desafio →</strong> Descuento exclusivo + acceso anticipado Operator<br>
+      <strong>Completa Operator →</strong> Sesion 1:1 bonus + priority Builder<br>
+      <strong>Completa Builder →</strong> Acceso Mastermind + deal flow<br>
+      <strong>Cada nivel desbloquea el siguiente con ventaja</strong>
+    </div>
+    <div class="node-tag t-pending">POR DISENAR</div>
+  </div>
+
+  <!-- Programas como funnel interno -->
+  <div class="node n-gold" style="left:20px;top:260px;width:250px;"
+       data-n="https://www.notion.so/3211b21db3ba80638cc9c0b5abc94397" data-z="onboarding">
+    <div class="node-t">👤 Avatar Skiller</div>
+    <div class="node-s">Tiene habilidad, no tiene sistema. No sabe vender ni posicionarse. Publica sin convertir</div>
+    <a class="node-notion" href="https://www.notion.so/3211b21db3ba80638cc9c0b5abc94397" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-blue" style="left:300px;top:260px;width:280px;"
+       data-n="https://www.notion.so/3211b21db3ba808abf95f1ba6a55f450" data-z="onboarding">
+    <div class="node-t">👤 Avatar Operator</div>
+    <div class="node-s">Opera pero ES el negocio. $1M+ CLP/mes sin sistema. Socials, salud, abogados, marketers, coaches</div>
+    <a class="node-notion" href="https://www.notion.so/3211b21db3ba808abf95f1ba6a55f450" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-purple" style="left:620px;top:260px;width:260px;"
+       data-n="https://www.notion.so/3211b21db3ba8058a9eed2c51668dcfe" data-z="onboarding">
+    <div class="node-t">👤 Avatar Builder</div>
+    <div class="node-s">Tiene clientes pero sin CRM. Todo en su cabeza. Necesita stack completo, no mas ideas</div>
+    <a class="node-notion" href="https://www.notion.so/3211b21db3ba8058a9eed2c51668dcfe" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:20px;top:450px;width:360px;"
+       data-n="https://www.notion.so/3271b21db3ba81e19a81ed83157d2406" data-z="onboarding">
+    <div class="node-t">🎯 Nichos Target</div>
+    <div class="node-s">Donde funciona PB al 100%: socials, salud mid-ticket, abogados, marketers, coaches, consultores, freelancers premium</div>
+    <a class="node-notion" href="https://www.notion.so/3271b21db3ba81e19a81ed83157d2406" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:420px;top:450px;width:340px;"
+       data-n="https://www.notion.so/32e1b21db3ba81a1b1a7eef9dad9471e" data-z="onboarding">
+    <div class="node-t">💻 Stack IA por Capa</div>
+    <div class="node-s">Skiller: Claude free + Notion + Fathom<br>Operator: + Claude Pro (PB paga) + GHL<br>Builder: + n8n + GitHub + Ads<br>Founder: + GHL Pro + agentes</div>
+    <a class="node-notion" href="https://www.notion.so/32e1b21db3ba81a1b1a7eef9dad9471e" target="_blank">→ Notion</a>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 04 PRODUCTO                                  -->
+<!-- ============================================ -->
+<div class="zone z-producto" id="zone-producto" style="left:1060px;top:900px;width:2800px;height:580px;">
+  <div class="zone-head">04 · Producto</div>
+
+  <!-- Programs as funnel -->
+  <div class="node n-gold" style="left:20px;top:55px;width:280px;"
+       data-n="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" data-z="producto">
+    <div class="node-t">🟡 Desafio 30 Dias</div>
+    <div class="node-s">Gratis. M1 Claridad + M2 Primeras Ventas + M3 Stack $0 + M4 Mentalidad. Comunidad Skool</div>
+    <div class="node-tag t-live">ACTIVO</div>
+    <a class="node-notion" href="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-blue n-hub" style="left:340px;top:45px;width:320px;"
+       data-n="https://www.notion.so/3251b21db3ba815182d9c3ae421d5673" data-z="producto">
+    <div class="node-t">🔵 Operator a Builder — $1,050,000 CLP</div>
+    <div class="node-s">6 meses · 12 sesiones 1:1 quincenales · WhatsApp abierto · Claude Pro incluido · Skool completo. Setup + oferta + CRM + automatizacion</div>
+    <div class="node-tag t-live">OFERTA PRINCIPAL</div>
+    <a class="node-notion" href="https://www.notion.so/3251b21db3ba815182d9c3ae421d5673" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-purple" style="left:700px;top:55px;width:280px;"
+       data-n="https://www.notion.so/32f1b21db3ba81c48688c64b6b12006c" data-z="producto">
+    <div class="node-t">🟣 Builder a Founder</div>
+    <div class="node-s">Personalizado. Stack avanzado + Claude Code + automatizacion real. 5 pilares: Stack, Marca, Funnel, Comunidad, Tracking</div>
+    <div class="node-tag t-wip">EN DESARROLLO</div>
+    <a class="node-notion" href="https://www.notion.so/32f1b21db3ba81c48688c64b6b12006c" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node" style="left:1020px;top:55px;width:240px; border-left:3px solid #444;"
+       data-n="https://www.notion.so/3251b21db3ba81e98dacf42abea89eb3" data-z="producto">
+    <div class="node-t">⚫ Founder Mastermind</div>
+    <div class="node-s">Builders graduados. Alianzas, equity, estructura legal, decisiones CEO. Por aplicacion</div>
+    <div class="node-tag t-future">FUTURO</div>
+    <a class="node-notion" href="https://www.notion.so/3251b21db3ba81e98dacf42abea89eb3" target="_blank">→ Notion</a>
+  </div>
+
+  <!-- Modules & deliverables -->
+  <div class="node n-purple" style="left:20px;top:240px;width:250px;"
+       data-n="https://www.notion.so/32f1b21db3ba819c9eadc57e143d29e9" data-z="producto">
+    <div class="node-t">📚 Modulos Skiller (M1-M4)</div>
+    <div class="node-s">Claridad · Primeras Ventas · Stack $0 · Mentalidad. Draft en Notion, falta subir a Skool</div>
+    <div class="node-tag t-wip">DRAFT</div>
+    <a class="node-notion" href="https://www.notion.so/32f1b21db3ba819c9eadc57e143d29e9" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-purple" style="left:310px;top:240px;width:250px;"
+       data-n="https://www.notion.so/3271b21db3ba81a99b47fc9bc9280199" data-z="producto">
+    <div class="node-t">📚 Modulos Operator (O1-O3)</div>
+    <div class="node-s">Fundaciones · Comercial + Sistema · Independencia · Implementacion por herramienta</div>
+    <div class="node-tag t-wip">DRAFT</div>
+    <a class="node-notion" href="https://www.notion.so/3271b21db3ba81a99b47fc9bc9280199" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-purple" style="left:600px;top:240px;width:250px;"
+       data-n="https://www.notion.so/3251b21db3ba81809091c965c0d88dc9" data-z="producto">
+    <div class="node-t">📚 Builder — 5 Pilares</div>
+    <div class="node-s">B1 Stack · B2 Marca · B3 Funnel · B4 Comunidad · B5 Tracking. Outline existe</div>
+    <div class="node-tag t-wip">OUTLINE</div>
+    <a class="node-notion" href="https://www.notion.so/3251b21db3ba81809091c965c0d88dc9" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-purple" style="left:890px;top:240px;width:240px;"
+       data-n="" data-z="producto">
+    <div class="node-t">🏫 Skool</div>
+    <div class="node-s">Plataforma comunidad + modulos. Leaderboard, badges, progresion. Donde vive todo</div>
+    <div class="node-tag t-blocker">NO CREADO</div>
+  </div>
+
+  <div class="node n-purple" style="left:20px;top:420px;width:250px;"
+       data-n="https://www.notion.so/2511b21db3ba80b3b910e385848baf48" data-z="producto">
+    <div class="node-t">🏛️ VAULT — Recursos Publicos</div>
+    <div class="node-s">Repositorio por etapa. Guias, frameworks, herramientas. Acceso post-diagnostico</div>
+    <a class="node-notion" href="https://www.notion.so/2511b21db3ba80b3b910e385848baf48" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-purple" style="left:310px;top:420px;width:240px;"
+       data-n="https://www.notion.so/2511b21db3ba80399e2dc4f50d6c6fed" data-z="producto">
+    <div class="node-t">🤖 GPT Codex</div>
+    <div class="node-s">v2: Operator (marketing, narrativa)<br>v3: Builder (CRM + funnels)<br>v4: Founder (copiloto)</div>
+    <div class="node-tag t-wip">v2 EXISTE</div>
+  </div>
+
+  <div class="node n-purple" style="left:590px;top:420px;width:260px;"
+       data-n="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" data-z="producto">
+    <div class="node-t">🧠 Brain Document</div>
+    <div class="node-s">Doc personalizado en Claude Projects. Cada cliente tiene el suyo. Setup en sesion 1-2 del programa</div>
+    <div class="node-tag t-live">DEFINIDO</div>
+  </div>
+
+  <div class="node n-purple" style="left:890px;top:420px;width:260px;"
+       data-n="https://www.notion.so/31d1b21db3ba818ca0c4dc8be864c1c7" data-z="producto">
+    <div class="node-t">🤖 Claude + Notion MCP Guide</div>
+    <div class="node-s">Guia para comunidad. Conectar Claude a Notion, Drive, Calendar. Fase Noob y Beta</div>
+    <a class="node-notion" href="https://www.notion.so/31d1b21db3ba818ca0c4dc8be864c1c7" target="_blank">→ Notion</a>
+  </div>
+
+  <!-- Entregables -->
+  <div class="node n-purple" style="left:1300px;top:55px;width:280px;"
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="producto">
+    <div class="node-t">📋 Entregables por Sesion</div>
+    <div class="node-s">S1-2: Setup + Brain Doc<br>S3-4: Oferta + clientes<br>S5-6: CRM + pipeline<br>S7-8: Automatizaciones<br>S9-12: Escala + independencia</div>
+    <div class="node-tag t-wip">TIMELINE EXISTE</div>
+  </div>
+
+  <div class="node n-purple" style="left:1300px;top:280px;width:280px;"
+       data-n="https://www.notion.so/3251b21db3ba81499e67d43aeb738eae" data-z="producto">
+    <div class="node-t">🗄️ Vault Interno</div>
+    <div class="node-s">Templates, scripts, data. Recursos internos que alimentan modulos publicos</div>
+    <a class="node-notion" href="https://www.notion.so/3251b21db3ba81499e67d43aeb738eae" target="_blank">→ Notion</a>
+  </div>
+
+  <!-- Backend refs inside producto -->
+  <div class="node n-green" style="left:1620px;top:55px;width:280px;"
+       data-n="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" data-z="producto">
+    <div class="node-t">🧠 Cerebro Central</div>
+    <div class="node-s">Fuente de verdad. Identidad, oferta, etapas, contexto operativo. Todo cambio empieza aca</div>
+    <div class="node-tag t-live">FUENTE DE VERDAD</div>
+    <a class="node-notion" href="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:1620px;top:240px;width:280px;"
+       data-n="https://www.notion.so/3301b21db3ba81f5aa18d6be5aeb786c" data-z="producto">
+    <div class="node-t">📘 Tesis del Ecosistema v1.0</div>
+    <div class="node-s">Marco teorico + etapas + programas + modelo de negocio + vision completa</div>
+    <div class="node-tag t-live">COMPLETO</div>
+    <a class="node-notion" href="https://www.notion.so/3301b21db3ba81f5aa18d6be5aeb786c" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:1620px;top:420px;width:280px;"
+       data-n="https://www.notion.so/3291b21db3ba8088bdfce3140d6f0392" data-z="producto">
+    <div class="node-t">🔧 Optimizaciones</div>
+    <div class="node-s">Fugas psicologicas y comerciales. Web fixes, stack contradictions, CTAs pendientes</div>
+    <a class="node-notion" href="https://www.notion.so/3291b21db3ba8088bdfce3140d6f0392" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:1940px;top:55px;width:260px;"
+       data-n="https://www.notion.so/3241b21db3ba81419316d11e8ffed84a" data-z="producto">
+    <div class="node-t">⚙️ Sistema Tecnico</div>
+    <div class="node-s">sync.py + GitHub Actions + 8 DBs contenido. Notion → sitio automatico</div>
+    <div class="node-tag t-wip">EN CONSTRUCCION</div>
+  </div>
+
+  <div class="node n-green" style="left:1940px;top:240px;width:260px;"
+       data-n="https://www.notion.so/3271b21db3ba81cc8ecee079b6688d87" data-z="producto">
+    <div class="node-t">✅ Pendientes Pre-Lanzamiento</div>
+    <div class="node-s">Bloques 1-5 abril. Skool, Stripe, modulos, web, CRM, contenido, ads</div>
+    <div class="node-tag t-pending">BLOQUE 1 ATRASADO</div>
+    <a class="node-notion" href="https://www.notion.so/3271b21db3ba81cc8ecee079b6688d87" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:1940px;top:420px;width:260px;"
+       data-n="https://www.notion.so/3271b21db3ba818e9bc7c0eb3f46816d" data-z="producto">
+    <div class="node-t">🚀 Plan Lanzamiento Abril</div>
+    <div class="node-s">Soft launch S1, escala S2-3, consolidacion S4. Target $10K+ en 2 meses</div>
+    <a class="node-notion" href="https://www.notion.so/3271b21db3ba818e9bc7c0eb3f46816d" target="_blank">→ Notion</a>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- 05 SUCCESS                                   -->
+<!-- ============================================ -->
+<div class="zone z-success" id="zone-success" style="left:3920px;top:300px;width:600px;height:800px;">
+  <div class="zone-head">05 · Success → Loop</div>
+
+  <div class="node n-red" style="left:20px;top:55px;width:260px;"
+       data-n="https://www.notion.so/32e1b21db3ba81d0aab7f67ef7df5168" data-z="success">
+    <div class="node-t">🏆 Casos de Exito</div>
+    <div class="node-s">Anatomia: El antes + El numero + El giro + La prueba. Banco por fase. Sin editar = evidencia real</div>
+    <div class="node-tag t-pending">SIN CASOS</div>
+    <a class="node-notion" href="https://www.notion.so/32e1b21db3ba81d0aab7f67ef7df5168" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-red" style="left:300px;top:55px;width:260px;"
+       data-n="" data-z="success">
+    <div class="node-t">📹 Testimonios</div>
+    <div class="node-s">Video 30-60 seg de clientes. Screenshot resultados. Audio Fathom. Clips retro</div>
+    <div class="node-tag t-pending">0 CAPTURADOS</div>
+  </div>
+
+  <div class="node n-red n-hub" style="left:20px;top:240px;width:540px;"
+       data-n="" data-z="success">
+    <div class="node-t">🔄 El Flywheel — Reconexion</div>
+    <div class="node-s">
+      Caso de exito → contenido nuevo (Reels, Carruseles) → <strong>vuelve a Marketing</strong><br>
+      Testimonios → prueba social en ads → <strong>vuelve a Meta Ads</strong><br>
+      Graduado refiere → 1 mes extra o giftcard $50K → <strong>vuelve a Referidos</strong><br>
+      Builder trae Operators · Operator trae Skillers<br><br>
+      <strong>A partir del 3er caso, el sistema gana velocidad propia</strong>
+    </div>
+  </div>
+
+  <div class="node n-red" style="left:20px;top:480px;width:540px;"
+       data-n="https://www.notion.so/3301b21db3ba81eea1aafb96330a5cda" data-z="success">
+    <div class="node-t">💰 Revenue Model</div>
+    <div class="node-s">
+      100 leads/mes → 50 diagnosticos → 20 Operators (~$10K) → 5 Builders (~$7.5-10K) → 2 Founders (TBD)<br>
+      Ciclo 6 meses: ~$18-25K USD · Escala 12 meses: $100K+ USD anual<br>
+      <strong>Target inmediato: $10K en 2 meses (Abril-Mayo 2026)</strong>
+    </div>
+    <a class="node-notion" href="https://www.notion.so/3301b21db3ba81eea1aafb96330a5cda" target="_blank">→ Notion</a>
+  </div>
+</div>
+
+<!-- FLOW LABELS -->
+<div class="fl-label" style="left:990px;top:355px;">trafico → lobby</div>
+<div class="fl-label" style="left:2560px;top:355px;">calificado → onboard</div>
+<div class="fl-label" style="left:3760px;top:650px;">onboard → producto</div>
+<div class="fl-label" style="left:3820px;top:1020px;">resultado → success</div>
+<div class="fl-label" style="left:4850px;top:200px;color:var(--green);">casos + referidos → marketing</div>
+
+</div><!-- /canvas -->
+</div><!-- /container -->
+
+<!-- PRIORITY PANEL -->
+<div id="priority-panel" class="hidden">
+  <h3>🔴 PRIORIDADES POR RESOLVER</h3>
+
+  <div class="priority-item" onclick="focusNode('producto','skool')">
+    <div class="pi-title">Skool no creado</div>
+    <div class="pi-zone">PRODUCTO</div>
+    <div class="pi-tag tag-blocker">BLOQUEANTE</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('marketing')">
+    <div class="pi-title">32/32 piezas contenido pendientes</div>
+    <div class="pi-zone">MARKETING</div>
+    <div class="pi-tag tag-blocker">BLOQUEANTE</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('comercial')">
+    <div class="pi-title">Stripe / pagos no configurados</div>
+    <div class="pi-zone">COMERCIAL</div>
+    <div class="pi-tag tag-blocker">BLOQUEANTE</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('success')">
+    <div class="pi-title">0 casos de exito capturados</div>
+    <div class="pi-zone">SUCCESS</div>
+    <div class="pi-tag tag-empty">VACIO</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('comercial')">
+    <div class="pi-title">DB Llamadas vacia</div>
+    <div class="pi-zone">COMERCIAL</div>
+    <div class="pi-tag tag-empty">VACIO</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('comercial')">
+    <div class="pi-title">WhatsApp cadencia sin armar</div>
+    <div class="pi-zone">COMERCIAL</div>
+    <div class="pi-tag tag-manual">POR ARMAR</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('comercial')">
+    <div class="pi-title">IG DM Automation — logica pending</div>
+    <div class="pi-zone">COMERCIAL</div>
+    <div class="pi-tag tag-noauto">LOGICA PENDING</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('onboarding')">
+    <div class="pi-title">Beneficios por graduacion sin disenar</div>
+    <div class="pi-zone">ONBOARDING</div>
+    <div class="pi-tag tag-manual">POR DISENAR</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('marketing')">
+    <div class="pi-title">Meta Ads no activo</div>
+    <div class="pi-zone">MARKETING</div>
+    <div class="pi-tag tag-noauto">NO ACTIVO</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('producto')">
+    <div class="pi-title">Modulos Skiller/Operator en draft</div>
+    <div class="pi-zone">PRODUCTO</div>
+    <div class="pi-tag tag-manual">DRAFT</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('producto')">
+    <div class="pi-title">Pendientes Pre-Lanzamiento — Bloque 1 atrasado</div>
+    <div class="pi-zone">PRODUCTO</div>
+    <div class="pi-tag tag-blocker">ATRASADO</div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <div style="font-weight:700;margin-bottom:6px;letter-spacing:1.5px;font-size:8px;color:var(--text-muted);">CONEXIONES</div>
+  <div class="leg-row"><div class="leg-line" style="background:var(--gold);"></div>Flujo principal</div>
+  <div class="leg-row"><div class="leg-line" style="background:var(--green);"></div>Referidos / loop</div>
+  <div style="margin-top:8px;font-weight:700;margin-bottom:4px;letter-spacing:1.5px;font-size:8px;color:var(--text-muted);">TAGS</div>
+  <div class="leg-row"><span class="node-tag t-live" style="margin:0;font-size:8px;">LIVE</span> Funcionando</div>
+  <div class="leg-row"><span class="node-tag t-wip" style="margin:0;font-size:8px;">WIP</span> En proceso</div>
+  <div class="leg-row"><span class="node-tag t-pending" style="margin:0;font-size:8px;">PENDING</span> Por hacer</div>
+  <div class="leg-row"><span class="node-tag t-manual" style="margin:0;font-size:8px;">MANUAL</span> Sin automatizar</div>
+  <div class="leg-row"><span class="node-tag t-blocker" style="margin:0;font-size:8px;">BLOCKER</span> Bloquea lanzamiento</div>
+  <div class="leg-row"><span class="node-tag t-future" style="margin:0;font-size:8px;">FUTURE</span> Futuro</div>
+</div>
+
+<!-- MINIMAP -->
+<div id="minimap"><div id="mm-vp"></div></div>
+
+<script>
+const canvas=document.getElementById('canvas'),container=document.getElementById('canvas-container');
+let scale=0.45,panX=-200,panY=-30,isDrag=false,sx,sy;
+
+function upd(){
+  canvas.style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
+  document.getElementById('zoom-display').textContent=Math.round(scale*100)+'%';
+  const mm=document.getElementById('minimap'),vp=document.getElementById('mm-vp');
+  const r=Math.min(mm.offsetWidth/5400,mm.offsetHeight/3200);
+  const cr=container.getBoundingClientRect();
+  vp.style.left=Math.max(0,(-panX/scale)*r)+'px';
+  vp.style.top=Math.max(0,(-panY/scale)*r)+'px';
+  vp.style.width=Math.min((cr.width/scale)*r,mm.offsetWidth)+'px';
+  vp.style.height=Math.min((cr.height/scale)*r,mm.offsetHeight)+'px';
+}
+
+container.addEventListener('mousedown',e=>{
+  if(e.target.closest('.node,.tb-btn,a,button'))return;
+  isDrag=true;sx=e.clientX-panX;sy=e.clientY-panY;
+  document.body.classList.add('grabbing');
+});
+window.addEventListener('mousemove',e=>{if(!isDrag)return;panX=e.clientX-sx;panY=e.clientY-sy;upd();});
+window.addEventListener('mouseup',()=>{isDrag=false;document.body.classList.remove('grabbing');});
+
+// Zoom at 70% speed
+container.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const d=e.deltaY>0?-0.035:0.035; // 70% of 0.05
+  const ns=Math.max(0.15,Math.min(1.5,scale+d));
+  const r=container.getBoundingClientRect();
+  const mx=e.clientX-r.left,my=e.clientY-r.top;
+  panX=mx-(mx-panX)*(ns/scale);panY=my-(my-panY)*(ns/scale);
+  scale=ns;upd();
+},{passive:false});
+
+// Touch
+let ltd=0;
+container.addEventListener('touchstart',e=>{
+  if(e.touches.length===1){isDrag=true;sx=e.touches[0].clientX-panX;sy=e.touches[0].clientY-panY;}
+  if(e.touches.length===2)ltd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+});
+container.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===1&&isDrag){panX=e.touches[0].clientX-sx;panY=e.touches[0].clientY-sy;upd();}
+  if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);scale=Math.max(0.15,Math.min(1.5,scale+(d-ltd)*0.002));ltd=d;upd();}
+},{passive:false});
+container.addEventListener('touchend',()=>{isDrag=false;});
+
+function zoomBy(d){scale=Math.max(0.15,Math.min(1.5,scale+d));upd();}
+function resetView(){scale=0.45;panX=-200;panY=-30;upd();}
+
+function focusZone(name){
+  const z=document.getElementById('zone-'+name);if(!z)return;
+  const cr=container.getBoundingClientRect();
+  const zl=parseInt(z.style.left),zt=parseInt(z.style.top);
+  const zw=parseInt(z.style.width)||z.offsetWidth,zh=parseInt(z.style.height)||z.offsetHeight;
+  const sx2=(cr.width*0.75)/zw,sy2=(cr.height*0.8)/zh;
+  scale=Math.min(sx2,sy2,0.85);
+  panX=(cr.width/2)-(zl+zw/2)*scale;
+  panY=(cr.height/2)-(zt+zh/2)*scale;
+  upd();
+  document.querySelectorAll('.zone').forEach(z2=>z2.style.opacity='0.2');
+  z.style.opacity='1';
+  setTimeout(()=>document.querySelectorAll('.zone').forEach(z2=>z2.style.opacity='1'),2500);
+}
+
+function focusNode(zone){focusZone(zone);}
+
+let prioOpen=false;
+function togglePriorities(){
+  prioOpen=!prioOpen;
+  document.getElementById('priority-panel').classList.toggle('hidden');
+  document.getElementById('minimap').classList.toggle('shift');
+  document.getElementById('prio-btn').style.borderColor=prioOpen?'var(--red)':'';
+  document.getElementById('prio-btn').style.color=prioOpen?'var(--red)':'';
+}
+
+// Sync button
+function syncNotion(){
+  const btn=document.getElementById('sync-btn');
+  btn.classList.add('syncing');btn.textContent='Syncing...';
+  // In real implementation: fetch from Notion API and update node states
+  setTimeout(()=>{
+    btn.classList.remove('syncing');btn.textContent='Sync Notion';
+    btn.style.borderColor='var(--gold)';btn.style.color='var(--gold)';
+    btn.textContent='Synced ✓';
+    setTimeout(()=>{btn.style.borderColor='';btn.style.color='var(--green)';btn.textContent='Sync Notion';},2000);
+  },1500);
+}
+
+// Node click → open Notion
+document.querySelectorAll('.node').forEach(n=>{
+  n.addEventListener('dblclick',e=>{
+    const url=n.dataset.n;
+    if(url)window.open(url,'_blank');
+  });
+});
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT')return;
+  switch(e.key){
+    case '0':resetView();break;
+    case '1':focusZone('marketing');break;
+    case '2':focusZone('comercial');break;
+    case '3':focusZone('onboarding');break;
+    case '4':focusZone('producto');break;
+    case '5':focusZone('success');break;
+    case 'p':togglePriorities();break;
+    case '+':case '=':zoomBy(0.08);break;
+    case '-':zoomBy(-0.08);break;
+  }
+});
+
+upd();
+</script>
+</body>
+</html>
