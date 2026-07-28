@@ -52,19 +52,22 @@ body.grabbing { cursor: grabbing; }
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 20px; z-index: 1000;
   backdrop-filter: blur(16px);
+  overflow-x:auto;
 }
 #toolbar .logo {
   font-family: 'Inter Tight', sans-serif;
   font-size: 13px; font-weight: 800;
   letter-spacing: 3px; color: var(--gold);
+  flex-shrink:0;
 }
 #toolbar .logo span { color: var(--text-muted); font-weight:400; font-size:11px; letter-spacing:1px; margin-left:12px; }
-.tb-group { display:flex; gap:6px; align-items:center; }
+.tb-group { display:flex; gap:6px; align-items:center; flex-shrink:0; }
 .tb-btn {
   background: var(--bg3); border:1px solid var(--border);
   color: var(--text-secondary); padding:6px 14px; border-radius:6px;
   font-family:'Inter',sans-serif; font-size:11px; font-weight:600;
   cursor:pointer; transition:all 0.2s; letter-spacing:0.5px;
+  white-space:nowrap;
 }
 .tb-btn:hover { border-color:var(--gold); color:var(--gold); }
 .tb-btn.sync-btn { border-color:var(--green); color:var(--green); }
@@ -72,7 +75,11 @@ body.grabbing { cursor: grabbing; }
 .tb-btn.sync-btn.syncing { animation: pulse 1s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
 #zoom-display { font-size:11px; color:var(--text-muted); min-width:44px; text-align:center; font-weight:600; }
-.tb-sep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+.tb-sep { width:1px; height:20px; background:var(--border); margin:0 4px; flex-shrink:0; }
+
+/* TIER FILTER (rangos de facturación) */
+.tb-btn.tier-btn { border-color:var(--border2); }
+.tb-btn.tier-btn[data-on] { background:rgba(200,168,74,0.14); border-color:var(--gold); color:var(--gold-bright); }
 
 /* PRIORITY PANEL */
 #priority-panel {
@@ -106,9 +113,43 @@ body.grabbing { cursor: grabbing; }
 .tag-manual { background:rgba(119,85,255,0.15); color:var(--purple); }
 .tag-noauto { background:rgba(68,102,255,0.15); color:var(--electric); }
 
+/* DETAIL PANEL — desplegable al click de un nodo (mismo lenguaje visual que priority-panel) */
+#detail-panel {
+  position:fixed; top:52px; right:0; width:340px; height:calc(100vh - 52px);
+  background:rgba(15,15,22,0.97); border-left:1px solid var(--border);
+  z-index:1001; overflow-y:auto; padding:20px;
+  backdrop-filter:blur(12px); transition:right 0.3s;
+}
+#detail-panel.hidden { right:-360px; }
+#detail-panel .dp-close { position:absolute; top:16px; right:16px; cursor:pointer; color:var(--text-muted); font-size:16px; }
+#detail-panel .dp-close:hover { color:var(--gold); }
+#detail-panel .dp-t { font-family:'Inter Tight',sans-serif; font-size:16px; font-weight:800; margin:0 26px 4px 0; line-height:1.3; }
+#detail-panel .dp-zone { font-size:9px; color:var(--text-muted); letter-spacing:1.5px; text-transform:uppercase; margin-bottom:14px; }
+#detail-panel .dp-s { font-size:12px; color:var(--text-secondary); line-height:1.6; margin-bottom:16px; }
+#detail-panel .dp-row { display:flex; flex-direction:column; gap:3px; padding:10px 0; border-top:1px solid var(--border); font-size:11px; }
+#detail-panel .dp-row .dp-k { color:var(--text-muted); font-size:9px; letter-spacing:1px; text-transform:uppercase; font-weight:700; }
+#detail-panel .dp-row .dp-v { color:var(--text-primary); }
+#detail-panel .dp-mvp { margin-top:14px; padding:11px 12px; border-radius:8px; background:rgba(56,176,104,0.07); border:1px solid rgba(56,176,104,0.25); font-size:11.5px; line-height:1.55; color:var(--text-primary); }
+#detail-panel .dp-mvp b { color:var(--green); font-size:9px; letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:5px; }
+#detail-panel .dp-notion { margin-top:14px; display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; font-size:11px; }
+#detail-panel .dp-notion.ok { background:rgba(56,176,104,0.08); border:1px solid rgba(56,176,104,0.25); color:var(--green); }
+#detail-panel .dp-notion.unk { background:rgba(255,255,255,0.03); border:1px solid var(--border2); color:var(--text-muted); }
+#detail-panel .dp-link { display:block; margin-top:12px; text-align:center; padding:9px; border-radius:8px; background:var(--bg3); border:1px solid var(--border2); color:var(--electric-bright); text-decoration:none; font-size:11px; font-weight:600; }
+#detail-panel .dp-link:hover { border-color:var(--electric); }
+
+/* Niveles de madurez: Manual / Sistema / Automatizado */
+.lvl-badge { display:inline-flex; align-items:center; gap:4px; font-size:9px; font-weight:700; padding:3px 8px; border-radius:4px; letter-spacing:0.4px; }
+.lvl-0 { background:rgba(224,53,53,0.12); color:var(--red); }
+.lvl-1 { background:rgba(148,148,180,0.12); color:var(--metal2); }
+.lvl-2 { background:rgba(68,102,255,0.13); color:var(--electric-bright); }
+.lvl-3 { background:rgba(56,176,104,0.14); color:var(--green); }
+
+/* Tier chip dentro del panel */
+.tier-badge { display:inline-flex; font-size:9px; font-weight:700; padding:3px 8px; border-radius:4px; background:rgba(200,168,74,0.13); color:var(--gold-bright); letter-spacing:0.4px; }
+
 /* CANVAS */
 #canvas-container { position:absolute; top:52px; left:0; right:0; bottom:0; overflow:hidden; }
-#canvas { position:absolute; width:5400px; height:3200px; transform-origin:0 0; }
+#canvas { position:absolute; width:5900px; height:3200px; transform-origin:0 0; }
 
 /* SVG */
 #connections { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1; }
@@ -149,6 +190,7 @@ body.grabbing { cursor: grabbing; }
   box-shadow:0 6px 20px rgba(0,0,0,0.5);
   border-color:var(--gold);
 }
+.node.dim { opacity:0.15; }
 .node-t { font-size:12px; font-weight:700; margin-bottom:3px; line-height:1.3; }
 .node-s { font-size:10px; color:var(--text-secondary); line-height:1.45; }
 .node-tag {
@@ -170,6 +212,8 @@ body.grabbing { cursor: grabbing; }
 }
 .node:hover .node-notion { display:block; }
 .node-notion:hover { opacity:1; }
+
+.node-verified { position:absolute; top:10px; right:12px; font-size:10px; }
 
 /* Accent borders */
 .n-gold { border-left:3px solid var(--gold); }
@@ -221,20 +265,25 @@ body.grabbing { cursor: grabbing; }
     <button class="tb-btn" onclick="focusZone('producto')">Producto</button>
     <button class="tb-btn" onclick="focusZone('success')">Success</button>
     <div class="tb-sep"></div>
+    <button class="tb-btn tier-btn" id="tier-all" onclick="setTier(null,this)" data-on>Todo MRR</button>
+    <button class="tb-btn tier-btn" id="tier-1" onclick="setTier('1',this)">$0→$1.5K</button>
+    <button class="tb-btn tier-btn" id="tier-2" onclick="setTier('2',this)">$1.5K→$5K</button>
+    <button class="tb-btn tier-btn" id="tier-3" onclick="setTier('3',this)">$5K→$15K</button>
+    <div class="tb-sep"></div>
     <button class="tb-btn" onclick="zoomBy(-0.08)">-</button>
     <span id="zoom-display">45%</span>
     <button class="tb-btn" onclick="zoomBy(0.08)">+</button>
     <button class="tb-btn" onclick="resetView()">Reset</button>
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="togglePriorities()" id="prio-btn">Prioridades</button>
-    <button class="tb-btn sync-btn" onclick="syncNotion()" id="sync-btn">Sync Notion</button>
+    <button class="tb-btn sync-btn" onclick="openCerebro()" id="sync-btn">🧠 Cerebro (Notion)</button>
   </div>
 </div>
 
 <div id="canvas-container">
 <div id="canvas">
 
-<svg id="connections" viewBox="0 0 5400 3200">
+<svg id="connections" viewBox="0 0 5900 3200">
   <defs>
     <marker id="ag" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
       <polygon points="0 0,7 2.5,0 5" fill="var(--gold)" opacity="0.5"/>
@@ -264,7 +313,8 @@ body.grabbing { cursor: grabbing; }
   <div class="zone-head">01 · Marketing</div>
 
   <div class="node n-gold" style="left:20px;top:55px;width:260px;"
-       data-n="https://www.notion.so/3211b21db3ba81f2813ae6065d109bfb" data-z="marketing">
+       data-n="https://www.notion.so/3211b21db3ba81f2813ae6065d109bfb" data-z="marketing" data-tier="1" data-level="1" data-verified="false"
+       data-mvp="Graba 1 reel a la semana con el celular, sin editar de más. La regla ya existe: 3 tomas máximo, la tercera se publica.">
     <div class="node-t">📱 Instagram Organico</div>
     <div class="node-s">Reels 2x/sem + Carruseles 1x/sem. Dolor + desbloqueo + demos de stack. CTA → bio link o DM</div>
     <div class="node-tag t-pending">0 PUBLICADOS</div>
@@ -272,7 +322,8 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-gold" style="left:320px;top:55px;width:260px;"
-       data-n="https://www.notion.so/3271b21db3ba81f1be4ad99d5a01efbd" data-z="marketing">
+       data-n="https://www.notion.so/3271b21db3ba81f1be4ad99d5a01efbd" data-z="marketing" data-tier="3" data-level="0" data-verified="false"
+       data-mvp="No lo enciendas todavía: sin reels orgánicos ya ganadores, pagar es amplificar algo sin validar.">
     <div class="node-t">📣 Meta Ads (Paid)</div>
     <div class="node-s">Trafico pagado → privatebuild.app o WhatsApp directo. Budget $5-10/dia. Creative desde Reels organicos ganadores</div>
     <div class="node-tag t-pending">NO ACTIVO</div>
@@ -280,22 +331,25 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-green" style="left:620px;top:55px;width:260px;"
-       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="marketing">
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="marketing" data-tier="3" data-level="1" data-verified="false"
+       data-mvp="Pídelo de palabra en la próxima call de cierre — la mecánica ya existe, solo falta pedirla.">
     <div class="node-t">🔄 Referidos</div>
     <div class="node-s"><strong>Pago:</strong> Refiere → 1 mes extra de programa. Si no renueva → se cortan accesos.<br><strong>Comunidad:</strong> Refiere → giftcard $50K CLP para herramientas (Claude, Notion, Fathom, etc). Vienen por el premio, se quedan nutridos</div>
-    <div class="node-tag t-wip">MECANICA DEFINIDA</div>
+    <div class="node-tag t-wip">MECANICA DEFINIDA, DORMIDA</div>
   </div>
 
   <div class="node n-gold" style="left:20px;top:230px;width:400px;"
-       data-n="https://www.notion.so/2501b21db3ba80f09425f7dd9fe92fe7" data-z="marketing">
-    <div class="node-t">🎬 Produccion Contenido MVP</div>
-    <div class="node-s">32 piezas planificadas (Reels, Carruseles, Stories). Regla: 3 tomas max, el 3ro se publica. Angulos: Tecnologia, Construir vs Escalar, Habilidades, Sabiduria</div>
-    <div class="node-tag t-pending">32/32 PENDIENTES</div>
-    <a class="node-notion" href="https://www.notion.so/2501b21db3ba80f09425f7dd9fe92fe7" target="_blank">→ Notion</a>
+       data-n="https://app.notion.com/p/2501b21db3ba80f09425f7dd9fe92fe7" data-z="marketing" data-tier="2" data-level="1" data-verified="true"
+       data-mvp="1 pieza publicada de ~198 en el repositorio real. La cancha no es planificar más — es empezar a publicar lo que ya está escrito.">
+    <div class="node-t">🎬 Repositorio-contenido (real)</div>
+    <div class="node-s">DB real en Notion "Repositorio-contenido": 177 ideas en Pending, 20 sin estado, 1 sola en Check (publicada). Regla: 3 tomas max, el 3ro se publica. Etiquetado por Canal (Marca Personal / Private Build), Categoria y Etapa</div>
+    <div class="node-tag t-blocker">1/198 PUBLICADO</div>
+    <a class="node-notion" href="https://app.notion.com/p/2501b21db3ba80f09425f7dd9fe92fe7" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-gold" style="left:460px;top:230px;width:240px;"
-       data-n="https://www.notion.so/20f1b21db3ba8045a59fd9ecf307c370" data-z="marketing">
+       data-n="https://www.notion.so/20f1b21db3ba8045a59fd9ecf307c370" data-z="marketing" data-tier="1" data-level="2" data-verified="false"
+       data-mvp="Ya está listo — úsalo tal cual para la próxima pieza, no lo sigas puliendo.">
     <div class="node-t">⚡ Contenido Hacks</div>
     <div class="node-s">Templates para hooks, CTAs, estructura. Formula por angulo comunicacional</div>
     <div class="node-tag t-live">LISTO</div>
@@ -303,23 +357,26 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-gold" style="left:20px;top:400px;width:280px;"
-       data-n="https://www.notion.so/3231b21db3ba818dbe97f08e5dde8edf" data-z="marketing">
+       data-n="https://www.notion.so/3231b21db3ba818dbe97f08e5dde8edf" data-z="marketing" data-tier="1" data-level="2" data-verified="false"
+       data-mvp="Elige 1 ángulo por semana, no los 4 a la vez.">
     <div class="node-t">🧭 Angulos Comunicacionales</div>
     <div class="node-s">🤖 Tecnologia & IA · 🏗️ Construir vs Escalar · 🧠 Habilidades & Cuellos · 💡 Sabiduria & Mentalidad</div>
     <a class="node-notion" href="https://www.notion.so/3231b21db3ba818dbe97f08e5dde8edf" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-gold" style="left:340px;top:400px;width:260px;"
-       data-n="https://www.notion.so/3271b21db3ba816390b0d1116f2a9f4b" data-z="marketing">
+       data-n="https://www.notion.so/3271b21db3ba816390b0d1116f2a9f4b" data-z="marketing" data-tier="1" data-level="1" data-verified="false"
+       data-mvp="Usa un template existente antes de diseñar uno nuevo.">
     <div class="node-t">🎨 Banco de Carruseles</div>
     <div class="node-s">Templates + assets en Canva. Fuente de verdad para produccion visual</div>
     <a class="node-notion" href="https://www.notion.so/3271b21db3ba816390b0d1116f2a9f4b" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-gold" style="left:640px;top:400px;width:240px;"
-       data-n="https://www.notion.so/3281b21db3ba81cebd23e7bdc75f4c55" data-z="marketing">
+       data-n="https://www.notion.so/3281b21db3ba81cebd23e7bdc75f4c55" data-z="marketing" data-tier="1" data-level="3" data-verified="true"
+       data-mvp="Ya está definido y en uso — no hay versión mínima más chica que construir.">
     <div class="node-t">🎨 Brand Guideline v2.0</div>
-    <div class="node-s">Identidad visual, tono, colores. Cyberpunk + sistemas + consciencia</div>
+    <div class="node-s">Identidad visual, tono, colores. "Build in silence. Navigate with clarity." Cyberpunk real + estructura, sin glassmorphism ni glow decorativo</div>
     <div class="node-tag t-live">DEFINIDO</div>
     <a class="node-notion" href="https://www.notion.so/3281b21db3ba81cebd23e7bdc75f4c55" target="_blank">→ Notion</a>
   </div>
@@ -328,11 +385,11 @@ body.grabbing { cursor: grabbing; }
 <!-- ============================================ -->
 <!-- 02 COMERCIAL                                 -->
 <!-- ============================================ -->
-<div class="zone z-comercial" id="zone-comercial" style="left:1060px;top:130px;width:1500px;height:700px;">
+<div class="zone z-comercial" id="zone-comercial" style="left:1060px;top:130px;width:1500px;height:800px;">
   <div class="zone-head">02 · Comercial</div>
 
   <div class="node n-blue" style="left:20px;top:55px;width:260px;"
-       data-n="https://www.notion.so/3251b21db3ba8147a74cc541eed017a2" data-z="comercial">
+       data-n="https://www.notion.so/3251b21db3ba8147a74cc541eed017a2" data-z="comercial" data-tier="1" data-level="2" data-verified="false">
     <div class="node-t">🌐 privatebuild.app</div>
     <div class="node-s">Landing publica. Mapa del desafio + nivelador. CTA → WhatsApp o formulario</div>
     <div class="node-tag t-live">LIVE</div>
@@ -340,14 +397,15 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-blue n-hub" style="left:320px;top:50px;width:280px;"
-       data-n="" data-z="comercial">
+       data-n="" data-z="comercial" data-tier="1" data-level="1" data-verified="false"
+       data-mvp="Escribe manualmente 1x/semana a cada lead tibio — la cadencia automatizada es problema de más adelante.">
     <div class="node-t">💬 WhatsApp — Lobby de Nutricion</div>
     <div class="node-s">Canal principal de nurturing. News, encuestas, temperatura de miembros. El "lobby" antes de entrar al ecosistema de pago</div>
     <div class="node-tag t-manual">MANUAL</div>
   </div>
 
   <div class="node n-blue" style="left:320px;top:230px;width:280px;"
-       data-n="" data-z="comercial">
+       data-n="" data-z="comercial" data-tier="1" data-level="0" data-verified="false">
     <div class="node-t">📅 Cadencia Semanal WhatsApp</div>
     <div class="node-s">
       <strong>Lun:</strong> Saludo inicio semana<br>
@@ -360,14 +418,14 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-blue" style="left:640px;top:55px;width:280px;"
-       data-n="" data-z="comercial">
+       data-n="" data-z="comercial" data-tier="3" data-level="0" data-verified="false">
     <div class="node-t">🤖 IG DM Automation</div>
     <div class="node-s">Clientes potenciales etiquetados en IG. Auto-saludo con pregunta sobre bio. ManyChat o Claude. "Has pensado en...?" → engancha → call<br><br><em>El flow logico primero, la automatizacion despues</em></div>
     <div class="node-tag t-pending">LOGICA PENDING</div>
   </div>
 
   <div class="node n-blue" style="left:640px;top:280px;width:280px;"
-       data-n="https://www.notion.so/3241b21db3ba8101aa48d376fbaf7bc0" data-z="comercial">
+       data-n="https://www.notion.so/3241b21db3ba8101aa48d376fbaf7bc0" data-z="comercial" data-tier="1" data-level="3" data-verified="false">
     <div class="node-t">📋 Formulario Diagnostico</div>
     <div class="node-s">10-15 preguntas → resultado automatico: Skiller / Operator / Builder. Make → Notion</div>
     <div class="node-tag t-live">LIVE</div>
@@ -375,14 +433,14 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-blue" style="left:960px;top:55px;width:260px;"
-       data-n="https://www.notion.so/bd8b00f0f7d445fc98501c25eef76dc0" data-z="comercial">
+       data-n="https://www.notion.so/bd8b00f0f7d445fc98501c25eef76dc0" data-z="comercial" data-tier="1" data-level="1" data-verified="false">
     <div class="node-t">📞 Llamada Diagnostico</div>
     <div class="node-s">30 min gratuita. Evaluar perfil + presentar programa + cierre o reserva ($100K CLP)</div>
     <div class="node-tag t-live">ACTIVO</div>
   </div>
 
   <div class="node n-blue" style="left:960px;top:220px;width:260px;"
-       data-n="https://www.notion.so/3271b21db3ba81b38a30febe03d5827b" data-z="comercial">
+       data-n="https://www.notion.so/3271b21db3ba81b38a30febe03d5827b" data-z="comercial" data-tier="1" data-level="2" data-verified="false">
     <div class="node-t">🎯 Script Master</div>
     <div class="node-s">Scripts de cierre por objecion: precio, tiempo, "no es el momento", "puedo solo". Reframes de dolores → ganancias concretas</div>
     <div class="node-tag t-live">LISTO</div>
@@ -390,33 +448,62 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-blue" style="left:960px;top:400px;width:260px;"
-       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="comercial">
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="comercial" data-tier="1" data-level="2" data-verified="false">
     <div class="node-t">💼 COMERCIAL — Fuente de Verdad</div>
-    <div class="node-s">Precios, programas, modalidades pago, argumentos, herramientas por etapa. Actualizado 31/03/2026</div>
-    <div class="node-tag t-live">ACTUALIZADO</div>
+    <div class="node-s">Precios, programas, modalidades pago, argumentos, herramientas por etapa. Link sin verificar en vivo — puede vivir hoy dentro de Cerebro Central en vez de como pagina propia</div>
+    <div class="node-tag t-wip">LINK SIN VERIFICAR</div>
     <a class="node-notion" href="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-green" style="left:20px;top:400px;width:270px;"
-       data-n="https://www.notion.so/375f862952a84b8a8987cef6978ac3fe" data-z="comercial">
-    <div class="node-t">📊 CRM — Clientes & Comunidad</div>
-    <div class="node-s">Nombre, etapa PB, estado, canal contacto, tipo oferta, MRR, diagnostico, onboarding, proxima accion, resultado logrado</div>
-    <div class="node-tag t-wip">ESTRUCTURA LISTA</div>
+       data-n="https://www.notion.so/375f862952a84b8a8987cef6978ac3fe" data-z="comercial" data-tier="1" data-level="3" data-verified="true"
+       data-mvp="Ya corre. Lo único pendiente es cargar cada llamada el mismo día — no falta construir nada nuevo.">
+    <div class="node-t">📁 CRM — Clientes & Comunidad</div>
+    <div class="node-s">Real, verificado hoy: 26 contactos. 🟢 3 Activos (Kathe, Marjorie, Laura — consultoria) · 🟡 3 Seguimiento · ✅ 3 Graduados (Isidora, Ignacio, Dominique — mentoria grupal Operator) · 👀 8 Leads · ⚡ 3 en Desafio (Stefany, Ivan, Pablo) · ✖️/Perdido 5 (incl. Carlos Carvajal/DataScope, ticket &gt;$7.000, perdido)</div>
+    <div class="node-tag t-live">26 CONTACTOS REALES</div>
     <a class="node-notion" href="https://www.notion.so/375f862952a84b8a8987cef6978ac3fe" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-blue" style="left:320px;top:460px;width:280px;"
-       data-n="https://www.notion.so/bd8b00f0f7d445fc98501c25eef76dc0" data-z="comercial">
-    <div class="node-t">📝 Llamadas de Venta (DB)</div>
-    <div class="node-s">Registro de calls: fecha, duracion, objeciones, resultado. Alimenta el CRM</div>
-    <div class="node-tag t-pending">VACIO</div>
+       data-n="https://app.notion.com/p/ce641129faaf4c8b8312d80e1e7d6470" data-z="comercial" data-tier="2" data-level="2" data-verified="true"
+       data-mvp="Carga solo 3 campos por call (fecha, resultado, objeción) el mismo día — el schema completo puede esperar.">
+    <div class="node-t">💰 Llamadas Comerciales (DB real)</div>
+    <div class="node-s">DB real en Notion, distinta de "Llamadas consultoria" (que vive local por cliente). Alimenta el CRM via relation. El estandar de campos ya esta definido en privatebuild.os, falta el habito de cargarla</div>
+    <div class="node-tag t-wip">SCHEMA LISTO, SIN CARGAR</div>
+    <a class="node-notion" href="https://app.notion.com/p/ce641129faaf4c8b8312d80e1e7d6470" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-blue" style="left:640px;top:460px;width:280px;"
-       data-n="" data-z="comercial">
+       data-n="" data-z="comercial" data-tier="1" data-level="1" data-verified="false">
     <div class="node-t">💳 Cierre & Pago</div>
     <div class="node-s">Reserva $100K CLP bloquea precio. 1-3 cuotas. Stripe pendiente. Transferencia manual por ahora</div>
     <div class="node-tag t-manual">SIN STRIPE</div>
+  </div>
+
+  <div class="node n-blue n-hub" style="left:20px;top:600px;width:400px;"
+       data-n="https://app.notion.com/p/3911b21db3ba81bb9aa6f2420a2c9d0a" data-z="comercial" data-tier="2" data-level="2" data-verified="true"
+       data-mvp="Ya está corriendo — mantener 2-3 engagements en paralelo con el estándar de página (Journey · Contexto · Roadmap · Historial · Llamadas consultoría) sin sumar un 4º todavía.">
+    <div class="node-t">🧭 Consultoria 1:1 (activa)</div>
+    <div class="node-s">3 engagements reales y activos hoy en CRM: Kathe (GMDS Agency), Marjorie (Emma Clara), Laura Sandoval (STM) — todas "Consultoria DWY". Cada una tiene su DB local "Llamadas consultoria" con schema estandar (ver privatebuild.os)</div>
+    <div class="node-tag t-live">MOTOR DE MRR ACTUAL</div>
+    <a class="node-notion" href="https://app.notion.com/p/3911b21db3ba81bb9aa6f2420a2c9d0a" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-blue" style="left:460px;top:600px;width:340px;"
+       data-n="" data-z="comercial" data-tier="1" data-level="1" data-verified="true"
+       data-mvp="No necesitas un doc de ICP — necesitas saber a quién NO contestarle. Si no factura ya, es contenido gratis, no una call.">
+    <div class="node-t">🎯 Avatar — Filtro ICP Tier B</div>
+    <div class="node-s">Confirmado en CRM real: los 3 en estado "⚡ Desafio" (Stefany, Ivan, Pablo) siguen sin convertir a pago. Filtro real: +$1.500 USD/mes de facturacion, negocio armado pero desordenado. Mismo criterio usado con Laura/STM</div>
+    <div class="node-tag t-live">CONFIRMADO EN CRM</div>
+  </div>
+
+  <div class="node n-blue" style="left:840px;top:600px;width:280px;"
+       data-n="https://app.notion.com/p/71be91dbf3884cc88de46ffca691123d" data-z="comercial" data-tier="2" data-level="1" data-verified="true"
+       data-mvp="Una línea por objeción real, pegada directo desde WhatsApp o Fathom — no un informe.">
+    <div class="node-t">💡 Aprendizajes Comerciales</div>
+    <div class="node-s">DB real en Notion: lo que falla en ventas o entrega vuelve al repositorio. Estructura creada, ciclo de carga no sistematico todavia</div>
+    <div class="node-tag t-wip">CICLO NO SISTEMATICO</div>
+    <a class="node-notion" href="https://app.notion.com/p/71be91dbf3884cc88de46ffca691123d" target="_blank">→ Notion</a>
   </div>
 </div>
 
@@ -427,22 +514,24 @@ body.grabbing { cursor: grabbing; }
   <div class="zone-head">03 · Onboarding</div>
 
   <div class="node n-green n-hub" style="left:20px;top:55px;width:340px;"
-       data-n="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" data-z="onboarding">
+       data-n="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" data-z="onboarding" data-tier="1" data-level="1" data-verified="true"
+       data-mvp="No inviertas más tiempo activo acá — déjalo vivo como filtro orgánico pasivo.">
     <div class="node-t">🟡 Desafio 30 Dias (Gratis)</div>
-    <div class="node-s">Skiller → Operator. Claridad + posicionamiento + primera venta. Puerta de entrada al ecosistema. Quien completa → beneficio unico para entrar a Operator</div>
-    <div class="node-tag t-live">ACTIVO</div>
+    <div class="node-s">Skiller → Operator. Puerta de entrada gratuita. Real en CRM: 3 personas activas en estado "⚡ Desafio" (Stefany, Ivan, Pablo), 0 conversiones a pago confirmadas todavia — no recibe mas inversion activa</div>
+    <div class="node-tag t-wip">3 EN CURSO, 0 A PAGO</div>
     <a class="node-notion" href="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-green" style="left:400px;top:55px;width:340px;"
-       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="onboarding">
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="onboarding" data-tier="2" data-level="1" data-verified="false">
     <div class="node-t">🔵 Setup Inicial — Operator (S1-S2)</div>
     <div class="node-s">Instalar Claude Pro + Notion + Drive + Calendar. Construir Brain Document personalizado. Mapear negocio actual. Plan 6 meses con hitos</div>
     <div class="node-tag t-ready">DEFINIDO</div>
   </div>
 
   <div class="node n-green" style="left:780px;top:55px;width:380px;"
-       data-n="" data-z="onboarding">
+       data-n="" data-z="onboarding" data-tier="2" data-level="0" data-verified="false"
+       data-mvp="Diseña 1 beneficio concreto por nivel (ej. sesion bonus) — no un sistema de badges completo.">
     <div class="node-t">🎁 Beneficios por Graduacion</div>
     <div class="node-s">
       <strong>Completa Desafio →</strong> Descuento exclusivo + acceso anticipado Operator<br>
@@ -455,35 +544,35 @@ body.grabbing { cursor: grabbing; }
 
   <!-- Programas como funnel interno -->
   <div class="node n-gold" style="left:20px;top:260px;width:250px;"
-       data-n="https://www.notion.so/3211b21db3ba80638cc9c0b5abc94397" data-z="onboarding">
+       data-n="https://www.notion.so/3211b21db3ba80638cc9c0b5abc94397" data-z="onboarding" data-tier="1" data-level="2" data-verified="false">
     <div class="node-t">👤 Avatar Skiller</div>
     <div class="node-s">Tiene habilidad, no tiene sistema. No sabe vender ni posicionarse. Publica sin convertir</div>
     <a class="node-notion" href="https://www.notion.so/3211b21db3ba80638cc9c0b5abc94397" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-blue" style="left:300px;top:260px;width:280px;"
-       data-n="https://www.notion.so/3211b21db3ba808abf95f1ba6a55f450" data-z="onboarding">
+       data-n="https://www.notion.so/3211b21db3ba808abf95f1ba6a55f450" data-z="onboarding" data-tier="1" data-level="2" data-verified="false">
     <div class="node-t">👤 Avatar Operator</div>
-    <div class="node-s">Opera pero ES el negocio. $1M+ CLP/mes sin sistema. Socials, salud, abogados, marketers, coaches</div>
+    <div class="node-s">Opera pero ES el negocio. $1M+ CLP/mes sin sistema. Real: 3 graduados de este perfil (Isidora, Ignacio, Dominique) via Mentoria Grupal Operator</div>
     <a class="node-notion" href="https://www.notion.so/3211b21db3ba808abf95f1ba6a55f450" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-purple" style="left:620px;top:260px;width:260px;"
-       data-n="https://www.notion.so/3211b21db3ba8058a9eed2c51668dcfe" data-z="onboarding">
+       data-n="https://www.notion.so/3211b21db3ba8058a9eed2c51668dcfe" data-z="onboarding" data-tier="1" data-level="2" data-verified="false">
     <div class="node-t">👤 Avatar Builder</div>
     <div class="node-s">Tiene clientes pero sin CRM. Todo en su cabeza. Necesita stack completo, no mas ideas</div>
     <a class="node-notion" href="https://www.notion.so/3211b21db3ba8058a9eed2c51668dcfe" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-green" style="left:20px;top:450px;width:360px;"
-       data-n="https://www.notion.so/3271b21db3ba81e19a81ed83157d2406" data-z="onboarding">
+       data-n="https://www.notion.so/3271b21db3ba81e19a81ed83157d2406" data-z="onboarding" data-tier="2" data-level="2" data-verified="false">
     <div class="node-t">🎯 Nichos Target</div>
     <div class="node-s">Donde funciona PB al 100%: socials, salud mid-ticket, abogados, marketers, coaches, consultores, freelancers premium</div>
     <a class="node-notion" href="https://www.notion.so/3271b21db3ba81e19a81ed83157d2406" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-green" style="left:420px;top:450px;width:340px;"
-       data-n="https://www.notion.so/32e1b21db3ba81a1b1a7eef9dad9471e" data-z="onboarding">
+       data-n="https://www.notion.so/32e1b21db3ba81a1b1a7eef9dad9471e" data-z="onboarding" data-tier="2" data-level="2" data-verified="false">
     <div class="node-t">💻 Stack IA por Capa</div>
     <div class="node-s">Skiller: Claude free + Notion + Fathom<br>Operator: + Claude Pro (PB paga) + GHL<br>Builder: + n8n + GitHub + Ads<br>Founder: + GHL Pro + agentes</div>
     <a class="node-notion" href="https://www.notion.so/32e1b21db3ba81a1b1a7eef9dad9471e" target="_blank">→ Notion</a>
@@ -498,7 +587,7 @@ body.grabbing { cursor: grabbing; }
 
   <!-- Programs as funnel -->
   <div class="node n-gold" style="left:20px;top:55px;width:280px;"
-       data-n="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" data-z="producto">
+       data-n="https://www.notion.so/32c1b21db3ba81279f74f91c20e049b9" data-z="producto" data-tier="1" data-level="1" data-verified="true">
     <div class="node-t">🟡 Desafio 30 Dias</div>
     <div class="node-s">Gratis. M1 Claridad + M2 Primeras Ventas + M3 Stack $0 + M4 Mentalidad. Comunidad Skool</div>
     <div class="node-tag t-live">ACTIVO</div>
@@ -506,7 +595,7 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-blue n-hub" style="left:340px;top:45px;width:320px;"
-       data-n="https://www.notion.so/3251b21db3ba815182d9c3ae421d5673" data-z="producto">
+       data-n="https://www.notion.so/3251b21db3ba815182d9c3ae421d5673" data-z="producto" data-tier="2" data-level="1" data-verified="false">
     <div class="node-t">🔵 Operator a Builder — $1,050,000 CLP</div>
     <div class="node-s">6 meses · 12 sesiones 1:1 quincenales · WhatsApp abierto · Claude Pro incluido · Skool completo. Setup + oferta + CRM + automatizacion</div>
     <div class="node-tag t-live">OFERTA PRINCIPAL</div>
@@ -514,7 +603,7 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-purple" style="left:700px;top:55px;width:280px;"
-       data-n="https://www.notion.so/32f1b21db3ba81c48688c64b6b12006c" data-z="producto">
+       data-n="https://www.notion.so/32f1b21db3ba81c48688c64b6b12006c" data-z="producto" data-tier="3" data-level="1" data-verified="false">
     <div class="node-t">🟣 Builder a Founder</div>
     <div class="node-s">Personalizado. Stack avanzado + Claude Code + automatizacion real. 5 pilares: Stack, Marca, Funnel, Comunidad, Tracking</div>
     <div class="node-tag t-wip">EN DESARROLLO</div>
@@ -522,7 +611,7 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node" style="left:1020px;top:55px;width:240px; border-left:3px solid #444;"
-       data-n="https://www.notion.so/3251b21db3ba81e98dacf42abea89eb3" data-z="producto">
+       data-n="https://www.notion.so/3251b21db3ba81e98dacf42abea89eb3" data-z="producto" data-tier="3" data-level="0" data-verified="false">
     <div class="node-t">⚫ Founder Mastermind</div>
     <div class="node-s">Builders graduados. Alianzas, equity, estructura legal, decisiones CEO. Por aplicacion</div>
     <div class="node-tag t-future">FUTURO</div>
@@ -531,7 +620,7 @@ body.grabbing { cursor: grabbing; }
 
   <!-- Modules & deliverables -->
   <div class="node n-purple" style="left:20px;top:240px;width:250px;"
-       data-n="https://www.notion.so/32f1b21db3ba819c9eadc57e143d29e9" data-z="producto">
+       data-n="https://www.notion.so/32f1b21db3ba819c9eadc57e143d29e9" data-z="producto" data-tier="2" data-level="1" data-verified="false">
     <div class="node-t">📚 Modulos Skiller (M1-M4)</div>
     <div class="node-s">Claridad · Primeras Ventas · Stack $0 · Mentalidad. Draft en Notion, falta subir a Skool</div>
     <div class="node-tag t-wip">DRAFT</div>
@@ -539,7 +628,7 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-purple" style="left:310px;top:240px;width:250px;"
-       data-n="https://www.notion.so/3271b21db3ba81a99b47fc9bc9280199" data-z="producto">
+       data-n="https://www.notion.so/3271b21db3ba81a99b47fc9bc9280199" data-z="producto" data-tier="2" data-level="1" data-verified="false">
     <div class="node-t">📚 Modulos Operator (O1-O3)</div>
     <div class="node-s">Fundaciones · Comercial + Sistema · Independencia · Implementacion por herramienta</div>
     <div class="node-tag t-wip">DRAFT</div>
@@ -547,7 +636,7 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-purple" style="left:600px;top:240px;width:250px;"
-       data-n="https://www.notion.so/3251b21db3ba81809091c965c0d88dc9" data-z="producto">
+       data-n="https://www.notion.so/3251b21db3ba81809091c965c0d88dc9" data-z="producto" data-tier="3" data-level="1" data-verified="false">
     <div class="node-t">📚 Builder — 5 Pilares</div>
     <div class="node-s">B1 Stack · B2 Marca · B3 Funnel · B4 Comunidad · B5 Tracking. Outline existe</div>
     <div class="node-tag t-wip">OUTLINE</div>
@@ -555,35 +644,36 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-purple" style="left:890px;top:240px;width:240px;"
-       data-n="" data-z="producto">
+       data-n="" data-z="producto" data-tier="3" data-level="0" data-verified="false"
+       data-mvp="No la construyas todavia. Cada sesion de consultoria que generalizas hoy es un ladrillo para cuando si se active.">
     <div class="node-t">🏫 Skool</div>
-    <div class="node-s">Plataforma comunidad + modulos. Leaderboard, badges, progresion. Donde vive todo</div>
-    <div class="node-tag t-blocker">NO CREADO</div>
+    <div class="node-s">Plataforma comunidad + modulos. Diferida a proposito hasta tener "basto espacio documentado" — no es blocker de lanzamiento, es secuencia deliberada</div>
+    <div class="node-tag t-future">DIFERIDO A PROPOSITO</div>
   </div>
 
   <div class="node n-purple" style="left:20px;top:420px;width:250px;"
-       data-n="https://www.notion.so/2511b21db3ba80b3b910e385848baf48" data-z="producto">
+       data-n="https://www.notion.so/2511b21db3ba80b3b910e385848baf48" data-z="producto" data-tier="2" data-level="2" data-verified="false">
     <div class="node-t">🏛️ VAULT — Recursos Publicos</div>
     <div class="node-s">Repositorio por etapa. Guias, frameworks, herramientas. Acceso post-diagnostico</div>
     <a class="node-notion" href="https://www.notion.so/2511b21db3ba80b3b910e385848baf48" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-purple" style="left:310px;top:420px;width:240px;"
-       data-n="https://www.notion.so/2511b21db3ba80399e2dc4f50d6c6fed" data-z="producto">
+       data-n="https://www.notion.so/2511b21db3ba80399e2dc4f50d6c6fed" data-z="producto" data-tier="0" data-level="1" data-verified="false">
     <div class="node-t">🤖 GPT Codex</div>
     <div class="node-s">v2: Operator (marketing, narrativa)<br>v3: Builder (CRM + funnels)<br>v4: Founder (copiloto)</div>
     <div class="node-tag t-wip">v2 EXISTE</div>
   </div>
 
   <div class="node n-purple" style="left:590px;top:420px;width:260px;"
-       data-n="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" data-z="producto">
+       data-n="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" data-z="producto" data-tier="0" data-level="2" data-verified="false">
     <div class="node-t">🧠 Brain Document</div>
     <div class="node-s">Doc personalizado en Claude Projects. Cada cliente tiene el suyo. Setup en sesion 1-2 del programa</div>
     <div class="node-tag t-live">DEFINIDO</div>
   </div>
 
   <div class="node n-purple" style="left:890px;top:420px;width:260px;"
-       data-n="https://www.notion.so/31d1b21db3ba818ca0c4dc8be864c1c7" data-z="producto">
+       data-n="https://www.notion.so/31d1b21db3ba818ca0c4dc8be864c1c7" data-z="producto" data-tier="0" data-level="2" data-verified="false">
     <div class="node-t">🤖 Claude + Notion MCP Guide</div>
     <div class="node-s">Guia para comunidad. Conectar Claude a Notion, Drive, Calendar. Fase Noob y Beta</div>
     <a class="node-notion" href="https://www.notion.so/31d1b21db3ba818ca0c4dc8be864c1c7" target="_blank">→ Notion</a>
@@ -591,14 +681,14 @@ body.grabbing { cursor: grabbing; }
 
   <!-- Entregables -->
   <div class="node n-purple" style="left:1300px;top:55px;width:280px;"
-       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="producto">
+       data-n="https://www.notion.so/3341b21db3ba811c9be5c153fbd96328" data-z="producto" data-tier="2" data-level="1" data-verified="false">
     <div class="node-t">📋 Entregables por Sesion</div>
     <div class="node-s">S1-2: Setup + Brain Doc<br>S3-4: Oferta + clientes<br>S5-6: CRM + pipeline<br>S7-8: Automatizaciones<br>S9-12: Escala + independencia</div>
     <div class="node-tag t-wip">TIMELINE EXISTE</div>
   </div>
 
   <div class="node n-purple" style="left:1300px;top:280px;width:280px;"
-       data-n="https://www.notion.so/3251b21db3ba81499e67d43aeb738eae" data-z="producto">
+       data-n="https://www.notion.so/3251b21db3ba81499e67d43aeb738eae" data-z="producto" data-tier="0" data-level="2" data-verified="false">
     <div class="node-t">🗄️ Vault Interno</div>
     <div class="node-s">Templates, scripts, data. Recursos internos que alimentan modulos publicos</div>
     <a class="node-notion" href="https://www.notion.so/3251b21db3ba81499e67d43aeb738eae" target="_blank">→ Notion</a>
@@ -606,15 +696,15 @@ body.grabbing { cursor: grabbing; }
 
   <!-- Backend refs inside producto -->
   <div class="node n-green" style="left:1620px;top:55px;width:280px;"
-       data-n="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" data-z="producto">
+       data-n="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" data-z="producto" data-tier="0" data-level="3" data-verified="true">
     <div class="node-t">🧠 Cerebro Central</div>
-    <div class="node-s">Fuente de verdad. Identidad, oferta, etapas, contexto operativo. Todo cambio empieza aca</div>
+    <div class="node-s">Fuente de verdad. Identidad, oferta, etapas, contexto operativo. Todo cambio empieza aca. Confirmado hoy: pagina raiz real, activa</div>
     <div class="node-tag t-live">FUENTE DE VERDAD</div>
     <a class="node-notion" href="https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-green" style="left:1620px;top:240px;width:280px;"
-       data-n="https://www.notion.so/3301b21db3ba81f5aa18d6be5aeb786c" data-z="producto">
+       data-n="https://www.notion.so/3301b21db3ba81f5aa18d6be5aeb786c" data-z="producto" data-tier="0" data-level="2" data-verified="false">
     <div class="node-t">📘 Tesis del Ecosistema v1.0</div>
     <div class="node-s">Marco teorico + etapas + programas + modelo de negocio + vision completa</div>
     <div class="node-tag t-live">COMPLETO</div>
@@ -622,32 +712,57 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-green" style="left:1620px;top:420px;width:280px;"
-       data-n="https://www.notion.so/3291b21db3ba8088bdfce3140d6f0392" data-z="producto">
+       data-n="https://www.notion.so/3291b21db3ba8088bdfce3140d6f0392" data-z="producto" data-tier="0" data-level="1" data-verified="false">
     <div class="node-t">🔧 Optimizaciones</div>
     <div class="node-s">Fugas psicologicas y comerciales. Web fixes, stack contradictions, CTAs pendientes</div>
     <a class="node-notion" href="https://www.notion.so/3291b21db3ba8088bdfce3140d6f0392" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-green" style="left:1940px;top:55px;width:260px;"
-       data-n="https://www.notion.so/3241b21db3ba81419316d11e8ffed84a" data-z="producto">
+       data-n="https://www.notion.so/3241b21db3ba81419316d11e8ffed84a" data-z="producto" data-tier="0" data-level="2" data-verified="false">
     <div class="node-t">⚙️ Sistema Tecnico</div>
     <div class="node-s">sync.py + GitHub Actions + 8 DBs contenido. Notion → sitio automatico</div>
     <div class="node-tag t-wip">EN CONSTRUCCION</div>
   </div>
 
   <div class="node n-green" style="left:1940px;top:240px;width:260px;"
-       data-n="https://www.notion.so/3271b21db3ba81cc8ecee079b6688d87" data-z="producto">
-    <div class="node-t">✅ Pendientes Pre-Lanzamiento</div>
-    <div class="node-s">Bloques 1-5 abril. Skool, Stripe, modulos, web, CRM, contenido, ads</div>
-    <div class="node-tag t-pending">BLOQUE 1 ATRASADO</div>
+       data-n="https://www.notion.so/3271b21db3ba81cc8ecee079b6688d87" data-z="producto" data-tier="0" data-level="1" data-verified="false">
+    <div class="node-t">✅ Ciclo Lanzamiento Abril</div>
+    <div class="node-s">El ciclo de lanzamiento de abril ya cerro. El motor de MRR hoy es la Consultoria 1:1 (ver Comercial), no el funnel de comunidad original</div>
+    <div class="node-tag t-wip">CICLO CERRADO</div>
     <a class="node-notion" href="https://www.notion.so/3271b21db3ba81cc8ecee079b6688d87" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-green" style="left:1940px;top:420px;width:260px;"
-       data-n="https://www.notion.so/3271b21db3ba818e9bc7c0eb3f46816d" data-z="producto">
-    <div class="node-t">🚀 Plan Lanzamiento Abril</div>
-    <div class="node-s">Soft launch S1, escala S2-3, consolidacion S4. Target $10K+ en 2 meses</div>
+       data-n="https://www.notion.so/3271b21db3ba818e9bc7c0eb3f46816d" data-z="producto" data-tier="0" data-level="1" data-verified="false">
+    <div class="node-t">🚀 Prioridad Actual</div>
+    <div class="node-s">Contenido (1/198 publicado) y Casos de Exito (0, con 3 activos + 3 graduados reales) son las 2 palancas de mayor leverage — no la comunidad de pago</div>
     <a class="node-notion" href="https://www.notion.so/3271b21db3ba818e9bc7c0eb3f46816d" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green n-hub" style="left:2260px;top:55px;width:340px;"
+       data-n="https://app.notion.com/p/3911b21db3ba81bb9aa6f2420a2c9d0a" data-z="producto" data-tier="0" data-level="3" data-verified="true"
+       data-mvp="Ya corre. Lo real por hacer esta en su Backlog operativo: mover llamadas Fathom→Notion y sacar contenido de aprendizajes, ambos marcados 🔴.">
+    <div class="node-t">⚙️ privatebuild.os (Mapa Operacion real)</div>
+    <div class="node-s">Pagina real en Notion, unica fuente de verdad del "claude-coo". 5 dominios (Contenido/Ventas/Cuerpo/Tareas/Conocimiento), cadencia Lun Sprint · Mie Pulse · Vie Cierre, y estandar de cliente de consultoria documentado</div>
+    <div class="node-tag t-live">VERIFICADO HOY</div>
+    <a class="node-notion" href="https://app.notion.com/p/3911b21db3ba81bb9aa6f2420a2c9d0a" target="_blank">→ Notion</a>
+  </div>
+
+  <div class="node n-green" style="left:2260px;top:280px;width:340px;"
+       data-n="" data-z="producto" data-tier="2" data-level="1" data-verified="true"
+       data-mvp="Ya es la tarea top del backlog real (marcada 🔴): sube 1 pieza esta semana sobre un hallazgo real de alguna consultoria.">
+    <div class="node-t">🔴 Backlog real — Sacar contenido de aprendizajes</div>
+    <div class="node-s">Item textual del backlog de privatebuild.os: "cada semana sin publicar es conocimiento perdido en el baul". Ej: hallazgo AI Shopping de Google surgido con Emma Clara (22/07)</div>
+    <div class="node-tag t-pending">🔴 URGENTE EN BACKLOG REAL</div>
+  </div>
+
+  <div class="node n-green" style="left:2260px;top:420px;width:340px;"
+       data-n="" data-z="producto" data-tier="2" data-level="1" data-verified="true"
+       data-mvp="Mueve 1 call reciente de Fathom a Notion hoy, no las 20 pendientes de una vez.">
+    <div class="node-t">🔴 Backlog real — Fathom → Notion</div>
+    <div class="node-s">Item textual del backlog de privatebuild.os: mover TODAS las llamadas de Fathom a la DB local "Llamadas consultoria" de cada cliente. El repo global se consolida 1 vez al mes desde ahi</div>
+    <div class="node-tag t-pending">🔴 URGENTE EN BACKLOG REAL</div>
   </div>
 </div>
 
@@ -658,22 +773,24 @@ body.grabbing { cursor: grabbing; }
   <div class="zone-head">05 · Success → Loop</div>
 
   <div class="node n-red" style="left:20px;top:55px;width:260px;"
-       data-n="https://www.notion.so/32e1b21db3ba81d0aab7f67ef7df5168" data-z="success">
+       data-n="https://www.notion.so/32e1b21db3ba81d0aab7f67ef7df5168" data-z="success" data-tier="3" data-level="0" data-verified="false"
+       data-mvp="El primer caso publicado, con un solo numero real, vale mas que esperar a tener 5 casos perfectos.">
     <div class="node-t">🏆 Casos de Exito</div>
-    <div class="node-s">Anatomia: El antes + El numero + El giro + La prueba. Banco por fase. Sin editar = evidencia real</div>
-    <div class="node-tag t-pending">SIN CASOS</div>
+    <div class="node-s">Anatomia: El antes + El numero + El giro + La prueba. 3 activos (Kathe, Marjorie, Laura) + 3 graduados reales (Isidora, Ignacio, Dominique) generando o con resultado real, sin capturarse todavia como caso navegable</div>
+    <div class="node-tag t-pending">0 CASOS, 6 CANDIDATOS REALES</div>
     <a class="node-notion" href="https://www.notion.so/32e1b21db3ba81d0aab7f67ef7df5168" target="_blank">→ Notion</a>
   </div>
 
   <div class="node n-red" style="left:300px;top:55px;width:260px;"
-       data-n="" data-z="success">
+       data-n="" data-z="success" data-tier="3" data-level="0" data-verified="false"
+       data-mvp="Pide 1 video de 30-60seg al cierre del ciclo — mismo momento en que pides el referido.">
     <div class="node-t">📹 Testimonios</div>
     <div class="node-s">Video 30-60 seg de clientes. Screenshot resultados. Audio Fathom. Clips retro</div>
     <div class="node-tag t-pending">0 CAPTURADOS</div>
   </div>
 
   <div class="node n-red n-hub" style="left:20px;top:240px;width:540px;"
-       data-n="" data-z="success">
+       data-n="" data-z="success" data-tier="3" data-level="0" data-verified="false">
     <div class="node-t">🔄 El Flywheel — Reconexion</div>
     <div class="node-s">
       Caso de exito → contenido nuevo (Reels, Carruseles) → <strong>vuelve a Marketing</strong><br>
@@ -685,12 +802,12 @@ body.grabbing { cursor: grabbing; }
   </div>
 
   <div class="node n-red" style="left:20px;top:480px;width:540px;"
-       data-n="https://www.notion.so/3301b21db3ba81eea1aafb96330a5cda" data-z="success">
+       data-n="https://www.notion.so/3301b21db3ba81eea1aafb96330a5cda" data-z="success" data-tier="0" data-level="1" data-verified="false">
     <div class="node-t">💰 Revenue Model</div>
     <div class="node-s">
-      100 leads/mes → 50 diagnosticos → 20 Operators (~$10K) → 5 Builders (~$7.5-10K) → 2 Founders (TBD)<br>
-      Ciclo 6 meses: ~$18-25K USD · Escala 12 meses: $100K+ USD anual<br>
-      <strong>Target inmediato: $10K en 2 meses (Abril-Mayo 2026)</strong>
+      <strong>Hoy:</strong> 1 consultoria 1:1 de 3 meses ya cierra ~$1.500-5.000 USD/mes de MRR — el motor real es sumar la 2da y 3ra en paralelo sin depender 100% del tiempo de Patrick<br>
+      <strong>Despues:</strong> el funnel de 100 leads/mes → Operators/Builders solo tiene sentido cuando Contenido + Casos de Exito esten corriendo<br>
+      El viejo target de "$10K en 2 meses (Abril-Mayo)" quedo atras — el foco cambio a consultoria 1:1 validando el Growth Engine
     </div>
     <a class="node-notion" href="https://www.notion.so/3301b21db3ba81eea1aafb96330a5cda" target="_blank">→ Notion</a>
   </div>
@@ -710,34 +827,46 @@ body.grabbing { cursor: grabbing; }
 <div id="priority-panel" class="hidden">
   <h3>🔴 PRIORIDADES POR RESOLVER</h3>
 
-  <div class="priority-item" onclick="focusNode('producto','skool')">
-    <div class="pi-title">Skool no creado</div>
-    <div class="pi-zone">PRODUCTO</div>
-    <div class="pi-tag tag-blocker">BLOQUEANTE</div>
-  </div>
-
   <div class="priority-item" onclick="focusZone('marketing')">
-    <div class="pi-title">32/32 piezas contenido pendientes</div>
+    <div class="pi-title">1/198 piezas publicadas (Repositorio-contenido real)</div>
     <div class="pi-zone">MARKETING</div>
-    <div class="pi-tag tag-blocker">BLOQUEANTE</div>
-  </div>
-
-  <div class="priority-item" onclick="focusZone('comercial')">
-    <div class="pi-title">Stripe / pagos no configurados</div>
-    <div class="pi-zone">COMERCIAL</div>
-    <div class="pi-tag tag-blocker">BLOQUEANTE</div>
+    <div class="pi-tag tag-blocker">MAYOR LEVERAGE</div>
   </div>
 
   <div class="priority-item" onclick="focusZone('success')">
-    <div class="pi-title">0 casos de exito capturados</div>
+    <div class="pi-title">0 casos de exito, con 6 candidatos reales (3 activos + 3 graduados)</div>
     <div class="pi-zone">SUCCESS</div>
+    <div class="pi-tag tag-blocker">MAYOR LEVERAGE</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('producto')">
+    <div class="pi-title">🔴 Backlog real: sacar contenido de aprendizajes de consultoria</div>
+    <div class="pi-zone">PRODUCTO</div>
+    <div class="pi-tag tag-blocker">URGENTE EN NOTION</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('producto')">
+    <div class="pi-title">🔴 Backlog real: mover llamadas de Fathom a Notion</div>
+    <div class="pi-zone">PRODUCTO</div>
+    <div class="pi-tag tag-blocker">URGENTE EN NOTION</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('marketing')">
+    <div class="pi-title">Referidos dormidos pese a tener mecanica definida</div>
+    <div class="pi-zone">MARKETING</div>
     <div class="pi-tag tag-empty">VACIO</div>
   </div>
 
   <div class="priority-item" onclick="focusZone('comercial')">
-    <div class="pi-title">DB Llamadas vacia</div>
+    <div class="pi-title">💰 Llamadas Comerciales: schema listo, sin cargar</div>
     <div class="pi-zone">COMERCIAL</div>
     <div class="pi-tag tag-empty">VACIO</div>
+  </div>
+
+  <div class="priority-item" onclick="focusZone('onboarding')">
+    <div class="pi-title">Desafio Skiller: 3 en curso, 0 conversiones a pago — no invertir mas ahi</div>
+    <div class="pi-zone">ONBOARDING</div>
+    <div class="pi-tag tag-empty">CONFIRMADO EN CRM</div>
   </div>
 
   <div class="priority-item" onclick="focusZone('comercial')">
@@ -758,10 +887,16 @@ body.grabbing { cursor: grabbing; }
     <div class="pi-tag tag-manual">POR DISENAR</div>
   </div>
 
+  <div class="priority-item" onclick="focusZone('comercial')">
+    <div class="pi-title">Stripe / pagos no configurados</div>
+    <div class="pi-zone">COMERCIAL</div>
+    <div class="pi-tag tag-manual">SIN STRIPE</div>
+  </div>
+
   <div class="priority-item" onclick="focusZone('marketing')">
-    <div class="pi-title">Meta Ads no activo</div>
+    <div class="pi-title">Meta Ads no activo — correcto no encenderlo sin ganadores organicos</div>
     <div class="pi-zone">MARKETING</div>
-    <div class="pi-tag tag-noauto">NO ACTIVO</div>
+    <div class="pi-tag tag-noauto">A PROPOSITO</div>
   </div>
 
   <div class="priority-item" onclick="focusZone('producto')">
@@ -770,12 +905,18 @@ body.grabbing { cursor: grabbing; }
     <div class="pi-tag tag-manual">DRAFT</div>
   </div>
 
-  <div class="priority-item" onclick="focusZone('producto')">
-    <div class="pi-title">Pendientes Pre-Lanzamiento — Bloque 1 atrasado</div>
+  <div class="priority-item" onclick="focusNode('producto','skool')">
+    <div class="pi-title">Skool diferido a proposito — no es blocker</div>
     <div class="pi-zone">PRODUCTO</div>
-    <div class="pi-tag tag-blocker">ATRASADO</div>
+    <div class="pi-tag tag-manual">SECUENCIA DELIBERADA</div>
   </div>
 </div>
+
+<!-- DETAIL PANEL (desplegable) -->
+<aside id="detail-panel" class="hidden">
+  <div class="dp-close" onclick="closeDetail()">✕</div>
+  <div id="dp-body"></div>
+</aside>
 
 <!-- LEGEND -->
 <div id="legend">
@@ -789,6 +930,10 @@ body.grabbing { cursor: grabbing; }
   <div class="leg-row"><span class="node-tag t-manual" style="margin:0;font-size:8px;">MANUAL</span> Sin automatizar</div>
   <div class="leg-row"><span class="node-tag t-blocker" style="margin:0;font-size:8px;">BLOCKER</span> Bloquea lanzamiento</div>
   <div class="leg-row"><span class="node-tag t-future" style="margin:0;font-size:8px;">FUTURE</span> Futuro</div>
+  <div style="margin-top:8px;font-weight:700;margin-bottom:4px;letter-spacing:1.5px;font-size:8px;color:var(--text-muted);">NIVEL (click en nodo para ver)</div>
+  <div class="leg-row"><span class="lvl-badge lvl-1" style="font-size:8px;">MANUAL</span></div>
+  <div class="leg-row"><span class="lvl-badge lvl-2" style="font-size:8px;">SISTEMA</span></div>
+  <div class="leg-row"><span class="lvl-badge lvl-3" style="font-size:8px;">AUTOMATIZADO</span></div>
 </div>
 
 <!-- MINIMAP -->
@@ -796,13 +941,13 @@ body.grabbing { cursor: grabbing; }
 
 <script>
 const canvas=document.getElementById('canvas'),container=document.getElementById('canvas-container');
-let scale=0.45,panX=-200,panY=-30,isDrag=false,sx,sy;
+let scale=0.45,panX=-200,panY=-30,isDrag=false,sx,sy,didDrag=false;
 
 function upd(){
   canvas.style.transform=`translate(${panX}px,${panY}px) scale(${scale})`;
   document.getElementById('zoom-display').textContent=Math.round(scale*100)+'%';
   const mm=document.getElementById('minimap'),vp=document.getElementById('mm-vp');
-  const r=Math.min(mm.offsetWidth/5400,mm.offsetHeight/3200);
+  const r=Math.min(mm.offsetWidth/5900,mm.offsetHeight/3200);
   const cr=container.getBoundingClientRect();
   vp.style.left=Math.max(0,(-panX/scale)*r)+'px';
   vp.style.top=Math.max(0,(-panY/scale)*r)+'px';
@@ -812,10 +957,10 @@ function upd(){
 
 container.addEventListener('mousedown',e=>{
   if(e.target.closest('.node,.tb-btn,a,button'))return;
-  isDrag=true;sx=e.clientX-panX;sy=e.clientY-panY;
+  isDrag=true;didDrag=false;sx=e.clientX-panX;sy=e.clientY-panY;
   document.body.classList.add('grabbing');
 });
-window.addEventListener('mousemove',e=>{if(!isDrag)return;panX=e.clientX-sx;panY=e.clientY-sy;upd();});
+window.addEventListener('mousemove',e=>{if(!isDrag)return;didDrag=true;panX=e.clientX-sx;panY=e.clientY-sy;upd();});
 window.addEventListener('mouseup',()=>{isDrag=false;document.body.classList.remove('grabbing');});
 
 // Zoom at 70% speed
@@ -866,26 +1011,72 @@ let prioOpen=false;
 function togglePriorities(){
   prioOpen=!prioOpen;
   document.getElementById('priority-panel').classList.toggle('hidden');
+  closeDetail();
   document.getElementById('minimap').classList.toggle('shift');
   document.getElementById('prio-btn').style.borderColor=prioOpen?'var(--red)':'';
   document.getElementById('prio-btn').style.color=prioOpen?'var(--red)':'';
 }
 
-// Sync button
-function syncNotion(){
-  const btn=document.getElementById('sync-btn');
-  btn.classList.add('syncing');btn.textContent='Syncing...';
-  // In real implementation: fetch from Notion API and update node states
-  setTimeout(()=>{
-    btn.classList.remove('syncing');btn.textContent='Sync Notion';
-    btn.style.borderColor='var(--gold)';btn.style.color='var(--gold)';
-    btn.textContent='Synced ✓';
-    setTimeout(()=>{btn.style.borderColor='';btn.style.color='var(--green)';btn.textContent='Sync Notion';},2000);
-  },1500);
+// Abre el Cerebro Central real en Notion (accion genuina, no una animacion de sync falsa)
+function openCerebro(){
+  window.open('https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c','_blank');
 }
 
-// Node click → open Notion
+/* ---------- FILTRO POR RANGO DE FACTURACION (MRR) ---------- */
+let activeTier=null;
+function setTier(tier,btn){
+  activeTier=tier;
+  document.querySelectorAll('.tier-btn').forEach(b=>b.removeAttribute('data-on'));
+  btn.setAttribute('data-on','');
+  document.querySelectorAll('.node').forEach(n=>{
+    if(tier===null){ n.classList.remove('dim'); return; }
+    const nt=n.dataset.tier;
+    // tier "0" = transversal, siempre visible; si no tiene data-tier no se filtra
+    const match = !nt || nt==='0' || nt===tier;
+    n.classList.toggle('dim', !match);
+  });
+}
+
+/* ---------- PANEL DESPLEGABLE (click en nodo) ---------- */
+const TIER_LABEL={'0':'Transversal — todos los niveles','1':'$0 → $1.500/mes','2':'$1.500 → $5.000/mes','3':'$5.000 → $15.000/mes'};
+const LVL_LABEL={'0':'GAP — no existe','1':'Manual — se hace, sin sistema','2':'Sistema — hay proceso, falta ejecutar a volumen','3':'Automatizado — corre solo'};
+
+function openDetail(n){
+  const title=n.querySelector('.node-t')?.innerHTML||'';
+  const desc=n.querySelector('.node-s')?.innerHTML||'';
+  const tagEl=n.querySelector('.node-tag');
+  const zone=(n.dataset.z||'').toUpperCase();
+  const tier=n.dataset.tier, level=n.dataset.level, verified=n.dataset.verified, mvp=n.dataset.mvp, url=n.dataset.n;
+
+  let h=`<div class="dp-t">${title}</div><div class="dp-zone">${zone}</div>`;
+  if(desc) h+=`<div class="dp-s">${desc}</div>`;
+  if(tagEl) h+=`<div style="margin-bottom:12px">${tagEl.outerHTML}</div>`;
+
+  let rows='';
+  if(tier!==undefined) rows+=`<div class="dp-row"><span class="dp-k">Rango de facturacion</span><span class="dp-v"><span class="tier-badge">${TIER_LABEL[tier]||tier}</span></span></div>`;
+  if(level!==undefined) rows+=`<div class="dp-row"><span class="dp-k">Nivel de madurez</span><span class="dp-v"><span class="lvl-badge lvl-${level}">${LVL_LABEL[level]||level}</span></span></div>`;
+  if(rows) h+=rows;
+
+  if(mvp) h+=`<div class="dp-mvp"><b>⚑ Minimo viable</b>${mvp}</div>`;
+
+  if(verified==='true') h+=`<div class="dp-notion ok">✅ Verificado en Notion en vivo hoy</div>`;
+  else if(verified==='false') h+=`<div class="dp-notion unk">⚠️ Link sin verificar hoy — puede estar desactualizado</div>`;
+
+  if(url) h+=`<a class="dp-link" href="${url}" target="_blank">Abrir en Notion ↗</a>`;
+
+  document.getElementById('dp-body').innerHTML=h;
+  document.getElementById('detail-panel').classList.remove('hidden');
+  document.getElementById('priority-panel').classList.add('hidden');
+  prioOpen=false;
+}
+function closeDetail(){ document.getElementById('detail-panel').classList.add('hidden'); }
+
+// Click (sin drag) → panel desplegable. Doble click → abre Notion directo.
 document.querySelectorAll('.node').forEach(n=>{
+  n.addEventListener('click',e=>{
+    if(didDrag){didDrag=false;return;}
+    openDetail(n);
+  });
   n.addEventListener('dblclick',e=>{
     const url=n.dataset.n;
     if(url)window.open(url,'_blank');
@@ -903,6 +1094,7 @@ document.addEventListener('keydown',e=>{
     case '4':focusZone('producto');break;
     case '5':focusZone('success');break;
     case 'p':togglePriorities();break;
+    case 'Escape':closeDetail();break;
     case '+':case '=':zoomBy(0.08);break;
     case '-':zoomBy(-0.08);break;
   }
