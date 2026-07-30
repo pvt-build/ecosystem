@@ -301,6 +301,20 @@ body.grabbing { cursor: grabbing; }
 #briefing .bf-enter { font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:800; letter-spacing:0.5px; background:var(--gold); color:#0a0a0f; border:none; padding:13px 22px; border-radius:8px; cursor:pointer; transition:all 0.2s; }
 #briefing .bf-enter:hover { background:var(--gold-bright); }
 #briefing .bf-updated { font-size:10.5px; color:var(--text-muted); }
+
+/* Cadena mental (cómo pienso el sistema) */
+#briefing .bf-chain { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:16px; }
+#briefing .bf-chain-item { background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:9px 13px; font-size:11.5px; color:var(--text-primary); font-weight:600; }
+#briefing .bf-chain-arrow { color:var(--text-muted); font-size:13px; }
+
+/* Ciclo diario/semanal/mensual con métricas */
+#briefing .bf-cycle { display:flex; flex-direction:column; gap:10px; }
+#briefing .bf-cycle-card { background:var(--bg2); border:1px solid var(--border); border-radius:9px; padding:13px 15px; }
+#briefing .bf-cycle-card .cy-h { display:flex; align-items:baseline; gap:8px; margin-bottom:8px; }
+#briefing .bf-cycle-card .cy-h b { font-family:'Inter Tight',sans-serif; font-size:12.5px; color:var(--gold); }
+#briefing .bf-cycle-card .cy-h span { font-size:9.5px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.6px; }
+#briefing .bf-cycle-card ul { margin:0; padding-left:18px; }
+#briefing .bf-cycle-card li { font-size:11.5px; color:var(--text-secondary); line-height:1.65; margin-bottom:3px; }
 .tb-btn.briefing-btn { border-color:var(--gold); color:var(--gold); }
 </style>
 </head>
@@ -308,33 +322,77 @@ body.grabbing { cursor: grabbing; }
 
 <div id="briefing">
   <div class="bf-wrap">
-    <div class="bf-eyebrow">privatebuild.os</div>
+    <div class="bf-eyebrow">Private Build — mi sistema</div>
     <h1>Antes de entrar al mapa</h1>
-    <div class="bf-quote">"Única fuente de verdad del claude-coo. Este mapa se lee al inicio de cada sesión operativa. Los cambios se hacen AQUÍ, no re-explicando en el chat." — Cerebro Central, Notion</div>
+    <div class="bf-quote">No leo esto para reportarle a nadie. Lo leo para no perderme dentro de mi propio proyecto — todavía está muy guagua, y es el que me lleva adonde quiero llegar.</div>
 
     <div class="bf-sec">
-      <div class="bf-sec-h">1 · Dominios</div>
+      <div class="bf-sec-h">1 · Cómo pienso este sistema</div>
+      <div class="bf-chain">
+        <span class="bf-chain-item">🧍 Yo soy mi propio avatar</span>
+        <span class="bf-chain-arrow">→</span>
+        <span class="bf-chain-item">🔬 Lo pruebo en mí primero</span>
+        <span class="bf-chain-arrow">→</span>
+        <span class="bf-chain-item">📝 Lo documento</span>
+        <span class="bf-chain-arrow">→</span>
+        <span class="bf-chain-item">🎓 Recién ahí lo enseño / lo vendo</span>
+      </div>
       <table>
-        <tr><th>Dominio</th><th>Quién lo registra</th><th>Qué aloja</th></tr>
-        <tr><td>Contenido</td><td>Repositorio-contenido</td><td>Ideas, piezas, hooks, series</td></tr>
-        <tr><td>Ventas</td><td>CCO Agent (rutea el COO)</td><td>Leads, transcripts, follow-ups</td></tr>
-        <tr><td>Cuerpo</td><td>Athlete OS (rutea el COO)</td><td>Entrenos, comidas, sueño, peso</td></tr>
-        <tr><td>Tareas / Op.</td><td>⏳ sin base definida</td><td>Entregables de clientes, admin</td></tr>
-        <tr><td>Conocimiento</td><td>Cerebro Central</td><td>Notas, referencias, frameworks</td></tr>
+        <tr><th>Área</th><th>Qué vive ahí</th></tr>
+        <tr><td>Contenido</td><td>Lo que genero y pruebo en mí, antes de ser método para otros</td></tr>
+        <tr><td>Ventas</td><td>Las consultorías reales, los leads, lo que ya está cerrando</td></tr>
+        <tr><td>Cuerpo</td><td>Athlete OS — entreno, nutrición, sueño. El negocio soy yo</td></tr>
+        <tr><td>Tareas</td><td>Entregables de clientes + administrativo, todavía sin base propia</td></tr>
+        <tr><td>Conocimiento</td><td>Cerebro Central — donde queda todo lo anterior una vez probado</td></tr>
       </table>
     </div>
 
     <div class="bf-sec">
-      <div class="bf-sec-h">2 · Cadencia</div>
-      <div class="bf-cadence">
-        <div class="bf-cad-item"><b>Lunes</b><span>Sprint Check</span></div>
-        <div class="bf-cad-item"><b>Miércoles</b><span>Mid-week Pulse</span></div>
-        <div class="bf-cad-item"><b>Viernes</b><span>Cierre Semanal</span></div>
+      <div class="bf-sec-h">2 · Cómo me relaciono con esto</div>
+      <div class="bf-cycle">
+        <div class="bf-cycle-card">
+          <div class="cy-h"><b>Diario</b><span>2 minutos</span></div>
+          <ul>
+            <li>¿Contesté a los leads tibios de WhatsApp hoy?</li>
+            <li>¿Tengo call de consultoría hoy? ¿Quedó cargada apenas termina?</li>
+          </ul>
+        </div>
+        <div class="bf-cycle-card">
+          <div class="cy-h"><b>Lunes — Sprint Check</b><span>métricas</span></div>
+          <ul>
+            <li>¿Cuántos leads nuevos entraron esta semana? (CRM → Origen)</li>
+            <li>¿Cuántas calls quedaron agendadas?</li>
+            <li>¿Qué sigue 🔴 vencido en el backlog de abajo?</li>
+          </ul>
+        </div>
+        <div class="bf-cycle-card">
+          <div class="cy-h"><b>Miércoles — Mid-week Pulse</b><span>métricas</span></div>
+          <ul>
+            <li>¿Subió alguna pieza de Pending a In progress o a publicada?</li>
+            <li>¿Cargué al menos 1 call en Llamadas Comerciales / Llamadas consultoría?</li>
+          </ul>
+        </div>
+        <div class="bf-cycle-card">
+          <div class="cy-h"><b>Viernes — Cierre Semanal</b><span>métricas</span></div>
+          <ul>
+            <li>MRR real activo esta semana (suma Ingreso cliente USD/mes de los 🟢 Activos en CRM)</li>
+            <li>¿Pedí un referido esta semana?</li>
+            <li>¿Capturé algún caso de éxito nuevo?</li>
+          </ul>
+        </div>
+        <div class="bf-cycle-card">
+          <div class="cy-h"><b>Mensual</b><span>métricas</span></div>
+          <ul>
+            <li>Ritual: sync DBs locales de llamadas → repo global</li>
+            <li>¿En qué tier de MRR estoy de verdad hoy? ($0-1.5K / $1.5K-5K / $5K-15K)</li>
+            <li>Auditar el Repositorio-contenido completo: ¿cuánto avanzó de Pending a publicado?</li>
+          </ul>
+        </div>
       </div>
     </div>
 
     <div class="bf-sec">
-      <div class="bf-sec-h">3 · Snapshot de hoy (Notion en vivo)</div>
+      <div class="bf-sec-h">3 · Dónde estoy parado hoy (Notion en vivo)</div>
       <div class="bf-snapshot">
         <div class="bf-snap-card"><div class="n">3</div><div class="l">Consultorías activas</div></div>
         <div class="bf-snap-card"><div class="n">3</div><div class="l">Graduados reales</div></div>
@@ -360,7 +418,7 @@ body.grabbing { cursor: grabbing; }
 
     <div class="bf-cta">
       <button class="bf-enter" onclick="enterMap()">Entrar al mapa completo (57 nodos) →</button>
-      <span class="bf-updated">Notion verificado en vivo · reabre este bloque con el botón 📋 Briefing en el toolbar</span>
+      <span class="bf-updated">Notion verificado en vivo · reabre este bloque con el botón dorado "📋 Volver al resumen"</span>
     </div>
   </div>
 </div>
