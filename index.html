@@ -253,6 +253,16 @@ body.grabbing { cursor: grabbing; }
 #minimap.shift { right:320px; }
 #mm-vp { position:absolute; border:1px solid var(--gold); background:rgba(200,168,74,0.06); pointer-events:none; }
 
+/* BOTON FLOTANTE — volver al resumen, siempre visible pase lo que pase con el toolbar */
+#briefing-fab {
+  position:fixed; top:64px; left:16px; z-index:1500;
+  background:var(--gold); color:#0a0a0f;
+  font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:800; letter-spacing:0.3px;
+  border:none; border-radius:20px; padding:10px 16px;
+  cursor:pointer; box-shadow:0 4px 16px rgba(0,0,0,0.5); transition:all 0.2s;
+}
+#briefing-fab:hover { background:var(--gold-bright); transform:translateY(-1px); }
+
 /* BRIEFING — bloque privatebuild.os, se lee antes de entrar al mapa */
 #briefing {
   position:fixed; inset:0; z-index:2000;
@@ -376,9 +386,10 @@ body.grabbing { cursor: grabbing; }
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="togglePriorities()" id="prio-btn">Prioridades</button>
     <button class="tb-btn sync-btn" onclick="openCerebro()" id="sync-btn">🧠 Cerebro (Notion)</button>
-    <button class="tb-btn briefing-btn" onclick="showBriefing()">📋 Briefing</button>
   </div>
 </div>
+
+<button id="briefing-fab" onclick="showBriefing()">📋 Volver al resumen</button>
 
 <div id="canvas-container">
 <div id="canvas">
