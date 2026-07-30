@@ -252,9 +252,108 @@ body.grabbing { cursor: grabbing; }
 }
 #minimap.shift { right:320px; }
 #mm-vp { position:absolute; border:1px solid var(--gold); background:rgba(200,168,74,0.06); pointer-events:none; }
+
+/* BRIEFING — bloque privatebuild.os, se lee antes de entrar al mapa */
+#briefing {
+  position:fixed; inset:0; z-index:2000;
+  background:var(--bg);
+  background-image:
+    linear-gradient(rgba(46,46,62,0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46,46,62,0.25) 1px, transparent 1px);
+  background-size:40px 40px;
+  overflow-y:auto;
+  padding:48px 24px 60px;
+}
+#briefing.hidden { display:none; }
+#briefing .bf-wrap { max-width:760px; margin:0 auto; }
+#briefing .bf-eyebrow { font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:800; letter-spacing:3px; color:var(--gold); text-transform:uppercase; }
+#briefing h1 { font-family:'Inter Tight',sans-serif; font-size:26px; font-weight:800; margin:8px 0 6px; }
+#briefing .bf-quote { font-size:12.5px; color:var(--text-muted); font-style:italic; border-left:2px solid var(--border2); padding-left:12px; margin:14px 0 28px; line-height:1.6; }
+#briefing .bf-sec { margin-bottom:26px; }
+#briefing .bf-sec-h { font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:var(--electric-bright); margin-bottom:10px; }
+#briefing table { width:100%; border-collapse:collapse; font-size:12px; }
+#briefing table th { text-align:left; color:var(--text-muted); font-weight:700; font-size:10px; letter-spacing:0.5px; text-transform:uppercase; padding:6px 10px; border-bottom:1px solid var(--border); }
+#briefing table td { padding:8px 10px; border-bottom:1px solid var(--border); color:var(--text-secondary); vertical-align:top; }
+#briefing table td:first-child { color:var(--text-primary); font-weight:600; white-space:nowrap; }
+#briefing .bf-cadence { display:flex; gap:10px; flex-wrap:wrap; }
+#briefing .bf-cad-item { flex:1; min-width:150px; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; }
+#briefing .bf-cad-item b { display:block; font-size:11px; color:var(--gold); margin-bottom:3px; }
+#briefing .bf-cad-item span { font-size:11px; color:var(--text-secondary); }
+#briefing .bf-snapshot { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+#briefing .bf-snap-card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:12px 14px; }
+#briefing .bf-snap-card .n { font-family:'Inter Tight',sans-serif; font-size:20px; font-weight:800; color:var(--text-primary); }
+#briefing .bf-snap-card .l { font-size:10px; color:var(--text-muted); letter-spacing:0.4px; text-transform:uppercase; margin-top:2px; }
+#briefing .bf-backlog { display:flex; flex-direction:column; gap:6px; }
+#briefing .bf-bl-item { font-size:12px; color:var(--text-secondary); padding:9px 12px; border-radius:7px; background:var(--bg2); border:1px solid var(--border); line-height:1.5; }
+#briefing .bf-bl-item.urgent { border-color:rgba(224,53,53,0.4); background:rgba(224,53,53,0.06); color:var(--text-primary); }
+#briefing .bf-bl-item .src { display:block; font-size:10px; color:var(--text-muted); margin-top:3px; }
+#briefing .bf-cta { display:flex; gap:10px; align-items:center; margin-top:34px; flex-wrap:wrap; }
+#briefing .bf-enter { font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:800; letter-spacing:0.5px; background:var(--gold); color:#0a0a0f; border:none; padding:13px 22px; border-radius:8px; cursor:pointer; transition:all 0.2s; }
+#briefing .bf-enter:hover { background:var(--gold-bright); }
+#briefing .bf-updated { font-size:10.5px; color:var(--text-muted); }
+.tb-btn.briefing-btn { border-color:var(--gold); color:var(--gold); }
 </style>
 </head>
 <body>
+
+<div id="briefing">
+  <div class="bf-wrap">
+    <div class="bf-eyebrow">privatebuild.os</div>
+    <h1>Antes de entrar al mapa</h1>
+    <div class="bf-quote">"Única fuente de verdad del claude-coo. Este mapa se lee al inicio de cada sesión operativa. Los cambios se hacen AQUÍ, no re-explicando en el chat." — Cerebro Central, Notion</div>
+
+    <div class="bf-sec">
+      <div class="bf-sec-h">1 · Dominios</div>
+      <table>
+        <tr><th>Dominio</th><th>Quién lo registra</th><th>Qué aloja</th></tr>
+        <tr><td>Contenido</td><td>Repositorio-contenido</td><td>Ideas, piezas, hooks, series</td></tr>
+        <tr><td>Ventas</td><td>CCO Agent (rutea el COO)</td><td>Leads, transcripts, follow-ups</td></tr>
+        <tr><td>Cuerpo</td><td>Athlete OS (rutea el COO)</td><td>Entrenos, comidas, sueño, peso</td></tr>
+        <tr><td>Tareas / Op.</td><td>⏳ sin base definida</td><td>Entregables de clientes, admin</td></tr>
+        <tr><td>Conocimiento</td><td>Cerebro Central</td><td>Notas, referencias, frameworks</td></tr>
+      </table>
+    </div>
+
+    <div class="bf-sec">
+      <div class="bf-sec-h">2 · Cadencia</div>
+      <div class="bf-cadence">
+        <div class="bf-cad-item"><b>Lunes</b><span>Sprint Check</span></div>
+        <div class="bf-cad-item"><b>Miércoles</b><span>Mid-week Pulse</span></div>
+        <div class="bf-cad-item"><b>Viernes</b><span>Cierre Semanal</span></div>
+      </div>
+    </div>
+
+    <div class="bf-sec">
+      <div class="bf-sec-h">3 · Snapshot de hoy (Notion en vivo)</div>
+      <div class="bf-snapshot">
+        <div class="bf-snap-card"><div class="n">3</div><div class="l">Consultorías activas</div></div>
+        <div class="bf-snap-card"><div class="n">3</div><div class="l">Graduados reales</div></div>
+        <div class="bf-snap-card"><div class="n">8</div><div class="l">Leads en pipeline</div></div>
+        <div class="bf-snap-card"><div class="n">0</div><div class="l">Casos de éxito publicados</div></div>
+        <div class="bf-snap-card"><div class="n">72</div><div class="l">Piezas de contenido pending</div></div>
+        <div class="bf-snap-card"><div class="n">38</div><div class="l">Piezas en progreso</div></div>
+      </div>
+    </div>
+
+    <div class="bf-sec">
+      <div class="bf-sec-h">4 · Backlog operativo real (Notion, sin editar)</div>
+      <div class="bf-backlog">
+        <div class="bf-bl-item urgent">🔴 Sacar contenido sobre los aprendizajes de las consultorías (ej. hallazgo AI Shopping de Google con Emma Clara)<span class="src">cada semana sin publicar es conocimiento perdido en el baúl</span></div>
+        <div class="bf-bl-item urgent">🔴 Mover TODAS las llamadas de Fathom a Notion — DB local "Llamadas consultoría" por cliente<span class="src">el repo global se consolida 1 vez al mes desde ahí</span></div>
+        <div class="bf-bl-item">Armar skill de SEO genérica e-commerce (4 artículos por dolor)<span class="src">origen: Emma Clara, 22/07</span></div>
+        <div class="bf-bl-item">Grabar video tutorial Shopify + Claude<span class="src">deuda desde semana 6, Emma Clara</span></div>
+        <div class="bf-bl-item">Diseñar encuesta de feedback para los 3 clientes activos<span class="src">reemplaza el pedido ad hoc de audio</span></div>
+        <div class="bf-bl-item">♻️ Ritual mensual: sync DBs locales de llamadas → repo global</div>
+        <div class="bf-bl-item">Definir base de tareas Private Build<span class="src">fila Tareas/Operación sigue ⏳</span></div>
+      </div>
+    </div>
+
+    <div class="bf-cta">
+      <button class="bf-enter" onclick="enterMap()">Entrar al mapa completo (57 nodos) →</button>
+      <span class="bf-updated">Notion verificado en vivo · reabre este bloque con el botón 📋 Briefing en el toolbar</span>
+    </div>
+  </div>
+</div>
 
 <div id="toolbar">
   <div class="logo">PRIVATE BUILD<span>ecosystem map</span></div>
@@ -277,6 +376,7 @@ body.grabbing { cursor: grabbing; }
     <div class="tb-sep"></div>
     <button class="tb-btn" onclick="togglePriorities()" id="prio-btn">Prioridades</button>
     <button class="tb-btn sync-btn" onclick="openCerebro()" id="sync-btn">🧠 Cerebro (Notion)</button>
+    <button class="tb-btn briefing-btn" onclick="showBriefing()">📋 Briefing</button>
   </div>
 </div>
 
@@ -342,8 +442,8 @@ body.grabbing { cursor: grabbing; }
        data-n="https://app.notion.com/p/2501b21db3ba80f09425f7dd9fe92fe7" data-z="marketing" data-tier="2" data-level="1" data-verified="true"
        data-mvp="1 pieza publicada de ~198 en el repositorio real. La cancha no es planificar más — es empezar a publicar lo que ya está escrito.">
     <div class="node-t">🎬 Repositorio-contenido (real)</div>
-    <div class="node-s">DB real en Notion "Repositorio-contenido": 177 ideas en Pending, 20 sin estado, 1 sola en Check (publicada). Regla: 3 tomas max, el 3ro se publica. Etiquetado por Canal (Marca Personal / Private Build), Categoria y Etapa</div>
-    <div class="node-tag t-blocker">1/198 PUBLICADO</div>
+    <div class="node-s">DB real en Notion "Repositorio-contenido", triageada esta semana: 93 Archivada, 38 In progress, 72 Pending. Regla: 3 tomas max, el 3ro se publica. Etiquetado por Canal (Marca Personal / Private Build), Categoria y Etapa</div>
+    <div class="node-tag t-blocker">93 ARCHIVADA · 38 EN PROGRESO · 72 PENDING</div>
     <a class="node-notion" href="https://app.notion.com/p/2501b21db3ba80f09425f7dd9fe92fe7" target="_blank">→ Notion</a>
   </div>
 
@@ -736,7 +836,7 @@ body.grabbing { cursor: grabbing; }
   <div class="node n-green" style="left:1940px;top:420px;width:260px;"
        data-n="https://www.notion.so/3271b21db3ba818e9bc7c0eb3f46816d" data-z="producto" data-tier="0" data-level="1" data-verified="false">
     <div class="node-t">🚀 Prioridad Actual</div>
-    <div class="node-s">Contenido (1/198 publicado) y Casos de Exito (0, con 3 activos + 3 graduados reales) son las 2 palancas de mayor leverage — no la comunidad de pago</div>
+    <div class="node-s">Contenido (38 en progreso de 72 pending, aun sin publicar) y Casos de Exito (0, con 3 activos + 3 graduados reales) son las 2 palancas de mayor leverage — no la comunidad de pago</div>
     <a class="node-notion" href="https://www.notion.so/3271b21db3ba818e9bc7c0eb3f46816d" target="_blank">→ Notion</a>
   </div>
 
@@ -828,7 +928,7 @@ body.grabbing { cursor: grabbing; }
   <h3>🔴 PRIORIDADES POR RESOLVER</h3>
 
   <div class="priority-item" onclick="focusZone('marketing')">
-    <div class="pi-title">1/198 piezas publicadas (Repositorio-contenido real)</div>
+    <div class="pi-title">38 piezas en progreso, 0 confirmadas publicadas (Repositorio-contenido real)</div>
     <div class="pi-zone">MARKETING</div>
     <div class="pi-tag tag-blocker">MAYOR LEVERAGE</div>
   </div>
@@ -1020,6 +1120,14 @@ function togglePriorities(){
 // Abre el Cerebro Central real en Notion (accion genuina, no una animacion de sync falsa)
 function openCerebro(){
   window.open('https://www.notion.so/3221b21db3ba8124bb10c05ab8a7675c','_blank');
+}
+
+/* ---------- BRIEFING (bloque privatebuild.os) ---------- */
+function enterMap(){
+  document.getElementById('briefing').classList.add('hidden');
+}
+function showBriefing(){
+  document.getElementById('briefing').classList.remove('hidden');
 }
 
 /* ---------- FILTRO POR RANGO DE FACTURACION (MRR) ---------- */
