@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PRIVATE BUILD — Sistema de Comunidad</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f; --bg2: #0f0f16; --bg3: #141420; --bg4: #1c1c2a;
+  --border: #1e1e2e; --border2: #2a2a3e;
+  --metal1: #8888a8; --metal2: #b0b0d0;
+  --text-primary: #e8e8f8; --text-secondary: #a0a0c0; --text-muted: #606080;
+  --green: #38b068; --electric: #4466ff; --electric-bright: #6688ff;
+  --gold: #c8a84a; --gold-bright: #ffe08a; --purple: #7755ff; --red: #e03535;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  background-image:
+    linear-gradient(rgba(46,46,62,0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(46,46,62,0.25) 1px, transparent 1px);
+  background-size: 40px 40px;
+  color: var(--text-primary);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+#topbar {
+  position: sticky; top:0; z-index:100; height:52px;
+  background: rgba(10,10,15,0.95); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 20px; backdrop-filter: blur(16px);
+}
+#topbar .logo {
+  font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:800;
+  letter-spacing:3px; color:var(--gold);
+}
+#topbar .logo span { color:var(--text-muted); font-weight:400; font-size:11px; letter-spacing:1px; margin-left:12px; }
+#topbar a.back {
+  color:var(--text-secondary); text-decoration:none; font-size:11px; font-weight:600;
+  letter-spacing:0.5px; border:1px solid var(--border); border-radius:6px; padding:6px 14px;
+  background:var(--bg3); transition:all 0.2s;
+}
+#topbar a.back:hover { border-color:var(--gold); color:var(--gold); }
+
+.wrap { max-width: 920px; margin:0 auto; padding: 40px 24px 72px; }
+
+.hero-tag { font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:800; letter-spacing:3px; text-transform:uppercase; color:var(--gold); }
+h1 { font-family:'Inter Tight',sans-serif; font-size:34px; font-weight:900; line-height:1.15; margin:10px 0 12px; letter-spacing:-0.5px; }
+.hero-sub { font-size:15px; color:var(--text-secondary); max-width:640px; }
+.hero-note { display:inline-block; margin-top:14px; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-muted); border:1px solid var(--border2); border-radius:4px; padding:4px 9px; }
+
+.section-head { font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--text-muted); margin:44px 0 16px; }
+
+/* PIPELINE */
+.pipe { display:flex; flex-wrap:wrap; align-items:stretch; gap:8px; }
+.pipe .chip {
+  flex:1 1 140px; min-width:140px; background:var(--bg2);
+  border:1px solid var(--border); border-radius:10px; padding:13px 14px;
+}
+.pipe .chip.accent-gold { border-color:rgba(200,168,74,0.4); }
+.pipe .chip.accent-green { border-color:rgba(56,176,104,0.4); }
+.pipe .chip .ct { font-size:12px; font-weight:700; margin-bottom:3px; }
+.pipe .chip .cs { font-size:10px; color:var(--text-secondary); letter-spacing:0.3px; }
+.pipe .arw { display:flex; align-items:center; color:var(--text-muted); font-size:15px; }
+.dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px; vertical-align:middle; }
+
+/* WEEK */
+.week { display:flex; flex-direction:column; gap:9px; }
+.day {
+  display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start;
+  background:var(--bg2); border:1px solid var(--border);
+  border-left:3px solid var(--border2); border-radius:10px; padding:14px 16px;
+}
+.day.today { border-color:rgba(200,168,74,0.45); border-left-color:var(--gold); background:rgba(200,168,74,0.04); }
+.day .d-when { flex:0 0 130px; }
+.day .d-name { font-family:'Inter Tight',sans-serif; font-size:15px; font-weight:800; }
+.day .d-com { display:inline-block; margin-top:5px; font-size:9px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; padding:2px 7px; border-radius:4px; }
+.com-free { background:rgba(148,148,180,0.12); color:var(--metal2); }
+.com-avisos { background:rgba(68,102,255,0.14); color:var(--electric-bright); }
+.badge-hoy { display:inline-block; margin-left:8px; font-size:9px; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; padding:2px 7px; border-radius:4px; background:rgba(200,168,74,0.16); color:var(--gold-bright); }
+.day .d-body { flex:1 1 300px; min-width:240px; }
+.day .d-pillar { font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:5px; }
+.day .d-ex { font-size:14px; color:var(--text-secondary); }
+.day.rest { border-style:dashed; background:transparent; }
+.day.rest .d-ex { color:var(--text-muted); }
+
+/* LEGEND */
+.legend { display:flex; flex-wrap:wrap; gap:16px; margin-top:18px; font-size:12px; color:var(--text-secondary); }
+
+footer { margin-top:52px; padding-top:20px; border-top:1px solid var(--border); font-size:11px; color:var(--text-muted); letter-spacing:0.5px; }
+footer b { color:var(--gold); font-weight:700; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">PRIVATE BUILD<span>sistema de comunidad</span></div>
+  <a class="back" href="index.html">← Ecosystem map</a>
+</div>
+
+<div class="wrap">
+
+  <div class="hero-tag">Comunidad · frecuencia</div>
+  <h1>La semana de la comunidad</h1>
+  <p class="hero-sub">Un hito real se convierte en contenido a través de los agentes y aterriza en la comunidad como <b style="color:var(--gold-bright);font-weight:700">Build en Vivo</b>. El día ya te dice qué publicar — se acaba la parálisis de decidir desde cero.</p>
+  <span class="hero-note">Ejemplo · no es doc vivo</span>
+
+  <div class="section-head">Cómo nace el contenido de hoy</div>
+  <div class="pipe">
+    <div class="chip accent-gold">
+      <div class="ct" style="color:var(--gold-bright)">Pagué Claude Max</div>
+      <div class="cs">el hito real</div>
+    </div>
+    <div class="arw">→</div>
+    <div class="chip">
+      <div class="ct" style="color:var(--electric-bright)">gems-finder</div>
+      <div class="cs">saca la gema</div>
+    </div>
+    <div class="arw">→</div>
+    <div class="chip">
+      <div class="ct" style="color:var(--purple)">Hooks + carruseles</div>
+      <div class="cs">IG · TikTok</div>
+    </div>
+    <div class="arw">→</div>
+    <div class="chip">
+      <div class="ct" style="color:var(--metal2)">Split / repurpose</div>
+      <div class="cs">1 hito → muchos</div>
+    </div>
+    <div class="arw">→</div>
+    <div class="chip accent-green">
+      <div class="ct" style="color:var(--green)">Comunidad</div>
+      <div class="cs">mensaje Build en Vivo</div>
+    </div>
+  </div>
+
+  <div class="section-head">La semana</div>
+  <div class="week">
+
+    <div class="day today">
+      <div class="d-when">
+        <div class="d-name">Lunes <span class="badge-hoy">hoy</span></div>
+        <div class="d-com com-free">Comunidad free</div>
+      </div>
+      <div class="d-body">
+        <div class="d-pillar" style="color:var(--gold-bright)"><span class="dot" style="background:var(--gold)"></span>Build en Vivo</div>
+        <div class="d-ex">Pagué Claude Max ($100 + imp.). No es gasto: es lo que me deja construir el agente de esta comunidad. El leverage correcto no se piensa, se paga.</div>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="d-when">
+        <div class="d-name">Martes</div>
+        <div class="d-com com-free">Comunidad free</div>
+      </div>
+      <div class="d-body">
+        <div class="d-pillar" style="color:var(--green)"><span class="dot" style="background:var(--green)"></span>Prueba social</div>
+        <div class="d-ex">El avance real de un miembro. Ej: miren el sistema que montó [nombre] en 2 semanas.</div>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="d-when">
+        <div class="d-name">Miércoles</div>
+        <div class="d-com com-free">Comunidad free</div>
+      </div>
+      <div class="d-body">
+        <div class="d-pillar" style="color:var(--purple)"><span class="dot" style="background:var(--purple)"></span>Conversación</div>
+        <div class="d-ex">Una pregunta que obligue a responder. Ej: ¿en qué estás trabado esta semana?</div>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="d-when">
+        <div class="d-name">Jueves</div>
+        <div class="d-com com-avisos">Comunidad avisos</div>
+      </div>
+      <div class="d-body">
+        <div class="d-pillar" style="color:var(--metal2)"><span class="dot" style="background:var(--metal1)"></span>Invitación a la call</div>
+        <div class="d-ex">Convocas la call semanal. Ej: mañana 19:00, tema: montar tu primer agente. ¿Caen?</div>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="d-when">
+        <div class="d-name">Viernes</div>
+        <div class="d-com com-free">Free + call en vivo</div>
+      </div>
+      <div class="d-body">
+        <div class="d-pillar" style="color:var(--electric-bright)"><span class="dot" style="background:var(--electric)"></span>Gema táctica</div>
+        <div class="d-ex">Un atajo concreto. Ej: el prompt con el que convierto 1 video en 5 posts.</div>
+      </div>
+    </div>
+
+    <div class="day rest">
+      <div class="d-when">
+        <div class="d-name" style="color:var(--text-secondary)">Sábado</div>
+      </div>
+      <div class="d-body">
+        <div class="d-ex">Silencio activo. Dejas que respiren.</div>
+      </div>
+    </div>
+
+    <div class="day">
+      <div class="d-when">
+        <div class="d-name">Domingo</div>
+        <div class="d-com com-avisos">Comunidad avisos</div>
+      </div>
+      <div class="d-body">
+        <div class="d-pillar" style="color:var(--metal2)"><span class="dot" style="background:var(--metal1)"></span>Concurso / recap</div>
+        <div class="d-ex">Setup del reto del mes + recap. Ej: reto de agosto — muestra tu stack. Premio: call 1:1.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--gold)"></span>Build en Vivo</span>
+    <span><span class="dot" style="background:var(--electric)"></span>Gema táctica</span>
+    <span><span class="dot" style="background:var(--green)"></span>Prueba social</span>
+    <span><span class="dot" style="background:var(--purple)"></span>Conversación</span>
+    <span><span class="dot" style="background:var(--metal1)"></span>Operativo</span>
+  </div>
+
+  <footer>
+    <b>Regla:</b> el mensaje de comunidad no nace en la comunidad — nace del contenido de IG/TikTok y aterriza acá como Build en Vivo. Uno construye, cinco cosechan. · Private Build · Ecosystem
+  </footer>
+
+</div>
+
+</body>
+</html>
