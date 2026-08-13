@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Private Build — Skills · Sistema Nervioso</title>
+<meta name="description" content="Mapa de interconexiones de las skills del arsenal de Private Build, con % de uso real por nodo.">
+<style>
+  :root{
+    --bg:#0a0e12; --bg-2:#0d1217;
+    --bone:#e7ddc7; --bone-dim:#8b8474;
+    --nerve:#5eead4; --nerve-dim:#2b6d64; --nerve-glow:rgba(94,234,212,.35);
+    --reasoning:#d9a441; --content-glow:#e8998f;
+    --warm:#e3a34a; --red:#e2685a;
+    --ink:#e9edf0; --ink-soft:#9aa7ac; --ink-faint:#5c666b;
+    --line:rgba(255,255,255,.09);
+    --font-display:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    --font-mono:ui-monospace,'SF Mono','Cascadia Code',Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#eef0ec; --bg-2:#e5e8e2; --bone:#6b5f45; --bone-dim:#b9b09a; --nerve:#0f8f7e;
+      --nerve-dim:#a8d9d1; --nerve-glow:rgba(15,143,126,.18); --reasoning:#b3701a;
+      --content-glow:#c96b60; --warm:#b3701a; --red:#c2483a;
+      --ink:#1c2024; --ink-soft:#5b6570; --ink-faint:#8a9299; --line:rgba(0,0,0,.1);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0a0e12; --bg-2:#0d1217; --bone:#e7ddc7; --bone-dim:#8b8474; --nerve:#5eead4;
+    --nerve-dim:#2b6d64; --nerve-glow:rgba(94,234,212,.35); --reasoning:#d9a441;
+    --content-glow:#e8998f; --warm:#e3a34a; --red:#e2685a;
+    --ink:#e9edf0; --ink-soft:#9aa7ac; --ink-faint:#5c666b; --line:rgba(255,255,255,.09);
+  }
+  :root[data-theme="light"]{
+    --bg:#eef0ec; --bg-2:#e5e8e2; --bone:#6b5f45; --bone-dim:#b9b09a; --nerve:#0f8f7e;
+    --nerve-dim:#a8d9d1; --nerve-glow:rgba(15,143,126,.18); --reasoning:#b3701a;
+    --content-glow:#c96b60; --warm:#b3701a; --red:#c2483a;
+    --ink:#1c2024; --ink-soft:#5b6570; --ink-faint:#8a9299; --line:rgba(0,0,0,.1);
+  }
+
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  .page{
+    background: radial-gradient(ellipse at 50% 0%, var(--bg-2), transparent 60%), var(--bg);
+    color:var(--ink); font-family:var(--font-display);
+    padding:clamp(20px,4vw,48px); max-width:1000px; margin:0 auto;
+  }
+  @media (prefers-reduced-motion: reduce){ *{animation:none !important;} }
+
+  .eyebrow{ font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:14px; }
+  h1{ font-size:clamp(24px,4vw,34px); font-weight:800; letter-spacing:-.01em; margin:0 0 12px; text-wrap:balance; }
+  h1 em{ font-style:normal; color:var(--nerve); }
+  .lede{ font-size:14.5px; line-height:1.6; color:var(--ink-soft); max-width:64ch; margin:0 0 20px; }
+
+  .tracker{ display:flex; align-items:center; gap:0; margin-bottom:20px; font-family:var(--font-mono); font-size:11.5px; flex-wrap:wrap; }
+  .tracker .step{ display:flex; align-items:center; gap:8px; padding:7px 14px; border:1px solid var(--line); color:var(--ink-faint); letter-spacing:.04em; }
+  .tracker .step.active{ color:var(--bg); background:var(--nerve); border-color:var(--nerve); font-weight:600; }
+  .tracker .step .n{ opacity:.6; }
+  .tracker .sep{ width:26px; height:1px; background:var(--line); flex:none; }
+
+  .diagram-wrap{ border:1px solid var(--line); border-radius:4px; background:var(--bg-2); margin-bottom:22px; padding:4px 0; }
+  svg{ display:block; width:100%; height:auto; }
+
+  .node-label{ font-family:var(--font-mono); font-size:12px; fill:var(--ink); font-weight:600; }
+  .node-sub{ font-family:var(--font-display); font-size:9.5px; fill:var(--ink-faint); }
+  .usage-alto{ fill:var(--nerve); font-weight:700; }
+  .usage-medio{ fill:var(--warm); font-weight:700; }
+  .usage-bajo{ fill:var(--ink-faint); }
+  .usage-cero{ fill:var(--red); font-weight:700; }
+  .bone-label{ font-family:var(--font-mono); font-size:12px; fill:var(--bone); font-weight:700; }
+  .bone-sub{ font-family:var(--font-display); font-size:9.5px; fill:var(--bone-dim); }
+  .zone-label{ font-family:var(--font-mono); font-size:10.5px; letter-spacing:.12em; fill:var(--ink-faint); opacity:.5; }
+
+  .nerve-path{ fill:none; stroke:var(--nerve); stroke-width:1.4; opacity:.55; transition:opacity .15s, stroke-width .15s; }
+  .nerve-path.reasoning{ stroke:var(--reasoning); stroke-dasharray:3 4; }
+  .nerve-path.util{ stroke:var(--ink-faint); stroke-dasharray:2 5; opacity:.35; }
+  .pulse{ fill:var(--nerve); filter:drop-shadow(0 0 3px var(--nerve-glow)); offset-distance:0%; animation:travel 3.4s linear infinite; }
+  .pulse.reasoning{ fill:var(--reasoning); }
+  .pulse.util{ fill:var(--ink-faint); opacity:.6; }
+  @keyframes travel{ to{ offset-distance:100%; } }
+
+  .vertebra{ fill:var(--bone-dim); opacity:.55; }
+  .bone-node{ fill:var(--bg); stroke:var(--bone); stroke-width:1.6; }
+  .bone-link{ fill:none; stroke:var(--bone-dim); stroke-width:2.5; opacity:.6; }
+  .halo{ fill:none; stroke:var(--ink-faint); stroke-width:1; stroke-dasharray:2 6; opacity:.3; }
+
+  .skill-grp{ cursor:pointer; }
+  .skill-grp:hover .nerve-path{ opacity:1; stroke-width:2.2; }
+  .skill-grp:hover .node-label{ fill:var(--nerve); }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:16px 24px; padding-top:18px; border-top:1px solid var(--line); font-size:12px; color:var(--ink-soft); }
+  .legend .item{ display:flex; align-items:center; gap:8px; }
+  .legend .swatch{ width:12px; height:12px; flex:none; }
+  .legend .dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="eyebrow">Private Build — Capa 6 del organismo</div>
+  <h1>Skills — el sistema <em>nervioso</em></h1>
+  <p class="lede">Mismo mapa de antes, con dos cosas nuevas: las 7 skills que se sumaron desde la última pasada (architect, design, closing, backlog, finance, relación, whatsapp), y el % de uso real medido contra tus 67 sesiones — al lado de cada nombre, no en un dashboard aparte.</p>
+
+  <div class="tracker">
+    <div class="step"><span class="n">①</span> Backend — huesos</div>
+    <div class="sep"></div>
+    <div class="step active"><span class="n">②</span> Skills — nervios</div>
+    <div class="sep"></div>
+    <div class="step"><span class="n">③</span> Content — lo que sale</div>
+  </div>
+
+  <div class="diagram-wrap">
+    <svg id="svg" viewBox="0 0 900 1980" xmlns="http://www.w3.org/2000/svg"></svg>
+  </div>
+
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:var(--ink);border-radius:50%;"></span>meta</div>
+    <div class="item"><span class="swatch" style="background:var(--nerve);border-radius:50%;"></span>orquestadora</div>
+    <div class="item"><span class="swatch" style="background:transparent;border:1.5px solid var(--nerve);border-radius:50%;"></span>ejecución</div>
+    <div class="item"><span class="swatch" style="border:1px dashed var(--ink-faint);border-radius:50%;"></span>sin backend / util</div>
+    <div class="item"><span class="dot" style="background:var(--nerve);"></span>uso alto (≥7%)</div>
+    <div class="item"><span class="dot" style="background:var(--warm);"></span>uso medio (4%)</div>
+    <div class="item"><span class="dot" style="background:var(--ink-faint);"></span>uso bajo (2%)</div>
+    <div class="item"><span class="dot" style="background:var(--red);"></span>sin sesión propia</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const SPINE_X = 450;
+
+  const bones = [
+    {id:'athlete',    x:180, y:290,  label:'Athlete OS',                 sub:'cuerpo · sueño · peso'},
+    {id:'correo',     x:720, y:290,  label:'Gmail',                      sub:'vida admin · solo lectura'},
+    {id:'cerebro',    x:450, y:290,  label:'Cerebro Central',            sub:'Constitución + avatar canónico'},
+    {id:'crm',        x:450, y:610,  label:'CRM · Clientes & Comunidad', sub:'leads · etapa · seguimiento'},
+    {id:'calls',      x:450, y:860,  label:'Calls & Aprendizajes',       sub:'Llamadas + Aprendizajes comerciales'},
+    {id:'backlog',    x:720, y:860,  label:'backlog-database-tareas',    sub:'pendientes · Impacto 10k'},
+    {id:'finanzas',   x:180, y:860,  label:'plan-financiero.json',       sub:'billetera · movimientos'},
+    {id:'repo',       x:450, y:1150, label:'Repositorio-contenido',      sub:'banco de ideas · 4 capas'},
+    {id:'curriculum', x:450, y:1400, label:'curriculum.md',              sub:'5 áreas · Growth Engine'},
+  ];
+
+  // el ritual — con qué arranca el día, antes que nada de negocio
+  const skills = [
+    {id:'pvt-athlete-agent',    x:180, y:110, layer:'ejec', label:'pvt-athlete-agent',    sub:'pesarse, sueño, agua',   links:['athlete'], usage:'bajo', pct:'2%'},
+    {id:'pvt-founder-agent',    x:380, y:95,  layer:'meta', label:'pvt-founder-agent',    sub:'el norte del día',       links:['cerebro'], usage:'bajo', pct:'2%*'},
+    {id:'pvt-architect-agent',  x:530, y:95,  layer:'meta', label:'pvt-architect-agent',  sub:'columna · estructura',   links:['cerebro'], usage:'alto', pct:'7%'},
+    {id:'pvt-asistente-agent',  x:720, y:110, layer:'ejec', label:'pvt-asistente-agent',  sub:'correo + agenda',        links:['correo'], usage:'alto', pct:'7%', util:true},
+    {id:'morning',              x:300, y:210, layer:'util', label:'morning',              sub:'brief del día',          links:['crm'], usage:'alto', pct:'26%', util:true},
+
+    {id:'pvt-voice-agent',      x:180, y:400, layer:'meta', label:'pvt-voice-agent',      sub:'oídos + boca',           links:['cerebro'], reasoning:true, usage:'bajo', pct:'2%'},
+    {id:'pvt-leverage-agent',   x:720, y:400, layer:'ejec', label:'pvt-leverage-agent',   sub:'sin backend — criterio', links:['cerebro'], reasoning:true, usage:'cero', pct:'0%'},
+    {id:'pvt-design-agent',     x:180, y:490, layer:'orq',  label:'pvt-design-agent',     sub:'lenguaje visual',        links:[], reasoning:true, usage:'bajo', pct:'2%'},
+    {id:'pvt-arsenal-agent',    x:720, y:490, layer:'meta', label:'pvt-arsenal-agent',    sub:'gobierna el resto',      links:[], reasoning:true, usage:'medio', pct:'4%'},
+    {id:'pvt-relacion-agent',   x:450, y:560, layer:'ejec', label:'pvt-relacion-agent',   sub:'sin backend — personal', links:[], reasoning:true, usage:'bajo', pct:'2%'},
+
+    {id:'pvt-crm-agent',        x:230, y:600,  layer:'ejec', label:'pvt-crm-agent',        sub:'pipeline + higiene',    links:['crm'], usage:'bajo', pct:'2%'},
+    {id:'pvt-cco-agent',        x:670, y:600,  layer:'ejec', label:'pvt-cco-agent',        sub:'CCO virtual',           links:['crm','calls'], usage:'medio', pct:'4%'},
+    {id:'pvt-setter-agent',     x:230, y:690,  layer:'ejec', label:'pvt-setter-agent',     sub:'etiqueta DMs',          links:['crm'], usage:'bajo', pct:'2%'},
+    {id:'pvt-whatsapp-agent',   x:670, y:690,  layer:'ejec', label:'pvt-whatsapp-agent',   sub:'barre bandeja, lectura',links:['crm'], usage:'bajo', pct:'2%', util:true},
+    {id:'pvt-closing-agent',    x:230, y:780,  layer:'ejec', label:'pvt-closing-agent',    sub:'cierre en vivo + roleplay', links:['crm','calls'], usage:'medio', pct:'4%'},
+    {id:'pvt-backlog-agent',    x:670, y:780,  layer:'orq',  label:'pvt-backlog-agent',    sub:'cola de despacho',      links:['backlog'], usage:'bajo', pct:'2%'},
+    {id:'pvt-finance-agent',    x:230, y:870,  layer:'ejec', label:'pvt-finance-agent',    sub:'Finance OS · 4 módulos', links:['finanzas'], usage:'bajo', pct:'2%'},
+    {id:'pvt-fathom-agent',     x:670, y:870,  layer:'ejec', label:'pvt-fathom-agent',     sub:'ingesta Fathom',        links:['calls'], usage:'cero', pct:'0%'},
+    {id:'pvt-intake-agent',     x:230, y:960,  layer:'orq',  label:'pvt-intake-agent',     sub:'extrae + rutea',        links:['crm','repo'], usage:'bajo', pct:'2%'},
+    {id:'pvt-funnel-agent',     x:670, y:960,  layer:'orq',  label:'pvt-funnel-agent',     sub:'nivelador-quiz',        links:['crm'], usage:'bajo', pct:'2%'},
+
+    {id:'pvt-gems-agent',       x:230, y:1060, layer:'ejec', label:'pvt-gems-agent',       sub:'talla gemas',           links:['calls','repo'], usage:'bajo', pct:'2%'},
+    {id:'pvt-content-agent',    x:670, y:1060, layer:'orq',  label:'pvt-content-agent',    sub:'triage de contenido',   links:['repo'], usage:'medio', pct:'4%'},
+    {id:'pvt-hooks-agent',      x:230, y:1160, layer:'ejec', label:'pvt-hooks-agent',      sub:'ganchos para reels',    links:['repo'], usage:'cero', pct:'0%'},
+    {id:'pvt-comunidad-agent',  x:670, y:1160, layer:'orq',  label:'pvt-comunidad-agent',  sub:'frecuencia comunidad',  links:['crm','repo'], usage:'medio', pct:'4%'},
+    {id:'pvt-carousels-agent',  x:230, y:1270, layer:'ejec', label:'pvt-carousels-agent',  sub:'carruseles lead magnet',links:['repo'], usage:'medio', pct:'4%'},
+    {id:'pvt-infoproduct-agent',x:670, y:1270, layer:'orq',  label:'pvt-infoproduct-agent',sub:'currícula + forge',     links:['curriculum','repo'], usage:'alto', pct:'7%'},
+  ];
+
+  // planeadas — sesión abierta, nunca construidas (dato real, no relleno)
+  const planned = [
+    {label:'pvt-growth-agent',     note:'sesión 30/07'},
+    {label:'pvt-cleaner-agent',    note:'sesión 31/07 — ¿ya absorbida por crm-agent?'},
+    {label:'pvt-backend-agent',    note:'sesión 01/08'},
+    {label:'pvt-consulting-agent', note:'sesión 03/08'},
+  ];
+
+  const boneMap = Object.fromEntries(bones.map(b => [b.id, b]));
+  const svg = document.getElementById('svg');
+  const NS = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs) => {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  };
+
+  function curve(x1,y1,x2,y2){
+    const midX = x1 + (x2-x1)*0.5;
+    return `M ${x1},${y1} C ${midX},${y1} ${midX},${y2} ${x2},${y2}`;
+  }
+
+  svg.appendChild(el('rect', {x:40,y:50,width:820,height:1740,rx:30,ry:30,class:'halo'}));
+  const haloLabel = el('text', {x:450,y:1810,'text-anchor':'middle',class:'zone-label'});
+  haloLabel.textContent = 'pvt-arsenal-agent · mapa vivo de esta capa completa';
+  svg.appendChild(haloLabel);
+
+  const zoneTop = el('text', {x:60,y:24,class:'zone-label'});
+  zoneTop.textContent = '① BACKEND — huesos, ya viven en Notion / Gmail / JSON local';
+  svg.appendChild(zoneTop);
+  const zoneBottom = el('text', {x:840,y:1935,'text-anchor':'end',class:'zone-label'});
+  zoneBottom.textContent = '③ CONTENT — lo que se publica ↓';
+  svg.appendChild(zoneBottom);
+
+  // vertical spine + vertebrae
+  svg.appendChild(el('line', {x1:SPINE_X,y1:290,x2:SPINE_X,y2:1400,stroke:'var(--bone-dim)','stroke-width':2,opacity:.5}));
+  for (let y = 300; y <= 1390; y += 22){
+    svg.appendChild(el('rect', {x:SPINE_X-8,y:y-3,width:16,height:6,rx:2,class:'vertebra'}));
+  }
+
+  // raíces — Athlete OS y Gmail convergen en Cerebro Central
+  svg.appendChild(el('path', {d:curve(180,290,SPINE_X,290), class:'bone-link'}));
+  svg.appendChild(el('path', {d:curve(720,290,SPINE_X,290), class:'bone-link'}));
+  // satélites — backlog y finanzas cuelgan del tronco a la altura de calls
+  svg.appendChild(el('path', {d:curve(SPINE_X,860,720,860), class:'bone-link'}));
+  svg.appendChild(el('path', {d:curve(SPINE_X,860,180,860), class:'bone-link'}));
+
+  bones.forEach(b => {
+    const g = el('g', {});
+    g.appendChild(el('rect', {x:b.x-13,y:b.y-13,width:26,height:26,transform:`rotate(45 ${b.x} ${b.y})`, class:'bone-node'}));
+    const t1 = el('text', {x:b.x, y:b.y-38, 'text-anchor':'middle', class:'bone-label'});
+    t1.textContent = b.label;
+    const t2 = el('text', {x:b.x, y:b.y-24, 'text-anchor':'middle', class:'bone-sub'});
+    t2.textContent = b.sub;
+    g.appendChild(t1); g.appendChild(t2);
+    svg.appendChild(g);
+  });
+
+  skills.forEach(s => {
+    const grp = el('g', {class:'skill-grp'});
+    s.links.forEach(linkId => {
+      const bone = boneMap[linkId];
+      const d = curve(s.x, s.y, bone.x, bone.y);
+      const cls = 'nerve-path' + (s.reasoning ? ' reasoning' : '') + (s.util ? ' util' : '');
+      grp.appendChild(el('path', {d, class: cls}));
+      const pulse = el('circle', {r:3, class:'pulse' + (s.reasoning?' reasoning':'') + (s.util?' util':'')});
+      pulse.style.offsetPath = `path('${d}')`;
+      pulse.style.animationDelay = (Math.random()*3.4).toFixed(2) + 's';
+      grp.appendChild(pulse);
+    });
+
+    const left = s.x < SPINE_X;
+    const r = s.layer === 'meta' ? 9 : s.layer === 'orq' ? 7.5 : 6.5;
+    let nodeAttrs = {cx:s.x, cy:s.y, r};
+    if (s.layer === 'meta') { nodeAttrs.fill = 'var(--ink)'; nodeAttrs.stroke = 'var(--nerve)'; nodeAttrs['stroke-width']=1.5; }
+    else if (s.layer === 'orq') { nodeAttrs.fill = 'var(--nerve)'; nodeAttrs.stroke='none'; }
+    else if (s.util) { nodeAttrs.fill='none'; nodeAttrs.stroke='var(--ink-faint)'; nodeAttrs['stroke-dasharray']='2 2'; nodeAttrs['stroke-width']=1.3; }
+    else { nodeAttrs.fill='var(--bg)'; nodeAttrs.stroke='var(--nerve)'; nodeAttrs['stroke-width']=1.5; }
+    grp.appendChild(el('circle', nodeAttrs));
+
+    const labelX = left ? s.x - 16 : s.x + 16;
+    const anchor = left ? 'end' : 'start';
+    const lbl = el('text', {x:labelX, y:s.y-3, 'text-anchor':anchor, class:'node-label'});
+    lbl.textContent = s.label;
+    const sub = el('text', {x:labelX, y:s.y+11, 'text-anchor':anchor, class:'node-sub'});
+    sub.textContent = s.sub + '  ·  ';
+    const pctSpan = el('tspan', {class:'usage-' + s.usage});
+    pctSpan.textContent = s.pct;
+    sub.appendChild(pctSpan);
+    grp.appendChild(lbl); grp.appendChild(sub);
+
+    svg.appendChild(grp);
+  });
+
+  // planned / ghost cluster — sesión abierta, nunca construida
+  const plannedY = 1540;
+  const plannedLabel = el('text', {x:450, y:plannedY-30, 'text-anchor':'middle', class:'zone-label'});
+  plannedLabel.textContent = 'sinapsis sin mielinizar — sesión abierta, nunca construidas';
+  svg.appendChild(plannedLabel);
+  const startX = 450 - ((planned.length-1) * 190) / 2;
+  planned.forEach((p, i) => {
+    const x = startX + i*190;
+    const g = el('g', {});
+    g.appendChild(el('circle', {cx:x, cy:plannedY, r:8, fill:'none', stroke:'var(--red)', 'stroke-dasharray':'2 3', opacity:.7}));
+    const t = el('text', {x, y:plannedY+22, 'text-anchor':'middle', class:'node-label'});
+    t.textContent = p.label;
+    const n = el('text', {x, y:plannedY+35, 'text-anchor':'middle', class:'node-sub'});
+    n.textContent = p.note;
+    g.appendChild(t); g.appendChild(n);
+    svg.appendChild(g);
+  });
+
+  // founder-agent routing arc (symbolic — enruta a todo el arsenal)
+  const arc = el('path', {d:'M 400,120 C 750,280 750,900 400,1270', fill:'none', stroke:'var(--nerve-dim)', 'stroke-width':1, 'stroke-dasharray':'1 5', opacity:.5});
+  svg.appendChild(arc);
+})();
+</script>
+
+</body>
+</html>
